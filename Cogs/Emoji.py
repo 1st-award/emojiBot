@@ -14,8 +14,8 @@ class Emoji(commands.Cog, name="기본 명령어"):
         print(ctx.message.attachments[0].filename)
         if not ImojiUtil.is_support_format(ctx.message.attachments[0].filename):
             raise NotImplementedError("지원하지 않는 파일입니다.")
-        SQLUtil.emoji_register(ctx.message.attachments[0].filename, emoji_command, ctx.guild.id)
         await ImojiUtil.emoji_save(ctx.message.attachments[0], ctx.guild.id)
+        SQLUtil.emoji_register(ctx.message.attachments[0].filename, emoji_command, ctx.guild.id)
         discord_embed = DiscordEmbed.info("등록 완료", f"{emoji_command}이(가) 등록되었습니다.")
         await ctx.send(embed=discord_embed, delete_after=5.0)
 
