@@ -8,7 +8,7 @@ class Emoji(commands.Cog, name="기본 명령어"):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="등록", help="`명령어로 쓸 단어`와 `사진`을 첨부해주세요!", usage="`!등록`\t`명령어`\t`사진`")
+    @commands.command(name="등록", help="`명령어로 쓸 단어`와 `사진`을 첨부해주세요! (지원 파일: `jpg`, `png`, `gif`)", usage="`!등록`\t`명령어`\t`사진`")
     async def emoji_register(self, ctx, emoji_command: str):
         await ctx.message.delete()
         print(ctx.message.attachments[0].filename)
