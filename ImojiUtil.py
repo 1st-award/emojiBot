@@ -51,4 +51,4 @@ def is_support_format(_emoji_filename: str):
         if _emoji_filename.endswith(support_format):
             return True
 
-    return False
+    raise NotImplementedError("지원하지 않는 파일입니다.")

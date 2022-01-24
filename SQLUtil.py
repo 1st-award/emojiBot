@@ -29,6 +29,12 @@ def new_db_setting(_guildID: int):
 
 
 def emoji_register(_filename: str, _emoji_command: str, _guildID: int):
+    print("searching before register...")
+    search_result = emoji_search(_emoji_command, _guildID)
+    print("searching result: ", type(search_result))
+    if search_result is not None:
+        raise FileExistsError("이미 등록되어있는 명령어입니다.")
+
     print(f"{_guildID}.db open...")
     conn = sqlite3.connect(f"Guilds/{_guildID}.db", isolation_level=None)
     cursor = conn.cursor()
