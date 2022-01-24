@@ -87,6 +87,9 @@ def emoji_search_all(_guildID: int):
     print(f"{_guildID}.db search complete and close...")
     conn.close()
 
+    if len(result_arg) == 0:
+        raise FileNotFoundError("등록된 이모지 명령어가 없습니다. `!등록`을 통해 이모지를 등록해주세요.")
+
     print("return tuple list...")
     return result_arg
 

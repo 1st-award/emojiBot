@@ -54,6 +54,12 @@ class Emoji(commands.Cog, name="기본 명령어"):
         discord_embed = await DiscordEmbed.emoji_list(ctx.message, search_result)
         await ctx.send(embed=discord_embed, delete_after=30.0)
 
+    @emoji_list.error
+    async def emoji_list_error(self, ctx, error: commands.errors.CommandInvokeError):
+        if isinstance(error.original, FileNotFoundError):
+            discord_embed = DiscordEmbed.warning("이모지 없음", error.original)
+        await ctx.send(embed=discord_embed)
+
 
 def setup(bot):
     bot.add_cog(Emoji(bot))
