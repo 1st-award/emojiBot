@@ -33,7 +33,8 @@ async def on_guild_join(guild):
     SQLUtil.new_guild_join(guild.id)
     for channel in guild.text_channels:
         if channel.permissions_for(guild.me).send_messages:
-            await channel.send('이모지 봇이 참여했습니다. 명령어는 !도움말입니다.', delete_after=10.0)
+            discord_embed = DiscordEmbed.info('봇 참가', '이모지 봇이 참여했습니다. 명령어는 `!도움말`입니다')
+            await channel.send(embed=discord_embed, delete_after=10.0)
         break
 
 

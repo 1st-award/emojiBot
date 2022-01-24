@@ -45,6 +45,14 @@ class Emoji(commands.Cog, name="기본 명령어"):
             discord_embed = DiscordEmbed.warning("삭제 오류", error.original)
         await ctx.send(embed=discord_embed, delete_after=5.0)
 
+    @commands.command(name="리스트", help="서버에 등록되어있는 모든 이모지 명령어를 보여줍니다.", usage="`!리스트`")
+    async def emoji_list(self, ctx):
+        await ctx.message.delete()
+        search_result = SQLUtil.emoji_search_all(ctx.guild.id)
+        print(type(search_result), search_result)
+        discord_embed = await DiscordEmbed.emoji_list(ctx.message, search_result)
+        await ctx.send(embed=discord_embed, delete_after=30.0)
+
 
 def setup(bot):
     bot.add_cog(Emoji(bot))

@@ -81,7 +81,7 @@ def emoji_search_all(_guildID: int):
     print(f"{_guildID}.db search complete and close...")
     conn.close()
 
-    print("return tuple...")
+    print("return tuple list...")
     return result_arg
 
 
