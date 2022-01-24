@@ -12,8 +12,8 @@ async def emoji_save(_emoji: discord.Attachment, _guildID: int):
 
     if not _emoji.filename.endswith(".gif"):
         emoji_resize_normal(_emoji.filename, _guildID)
-    else:
-        emoji_resize_gif(_emoji.filename, _guildID)
+    # else:
+    #    emoji_resize_gif(_emoji.filename, _guildID)
 
 
 async def emoji_remove(_emoji_filename: str, _guildID: int):
