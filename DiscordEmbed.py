@@ -26,7 +26,7 @@ async def picture(_message: discord.Message, _emoji_file_name: str):
 async def emoji_list(_message: discord.Message, _search_result_list: list):
     print("start make emoji list...")
 
-    class SearchCommand:
+    class IndexCommand:
         def __init__(self, length):
             self.current = 0
             self.stop = length
@@ -44,7 +44,7 @@ async def emoji_list(_message: discord.Message, _search_result_list: list):
             else:
                 raise StopAsyncIteration
 
-    async for emoji_num in SearchCommand(len(_search_result_list)):
+    async for emoji_num in IndexCommand(len(_search_result_list)):
         emoji_command_str = emoji_num
 
     embed = discord.Embed(title="이모지 리스트", description=emoji_command_str, color=discord.Colour.green())

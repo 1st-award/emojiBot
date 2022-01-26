@@ -1,5 +1,6 @@
-import os
+# TODO asqlite 또는 asqlite3 이용해서 비동기 db접근 만들기
 import sqlite3
+import os
 
 
 def new_guild_join(_guildID: int):
@@ -47,7 +48,7 @@ def emoji_register(_filename: str, _emoji_command: str, _guildID: int):
     conn.close()
 
 
-def emoji_remove_db(_emoji_command: str, _guildID: int):
+def emoji_remove(_emoji_command: str, _guildID: int):
     print(f"{_guildID}.db open...")
     conn = sqlite3.connect(f"Guilds/{_guildID}.db", isolation_level=None)
     cursor = conn.cursor()

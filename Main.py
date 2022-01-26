@@ -73,7 +73,8 @@ async def help_command(ctx, func=None):
     cog_list = ["기본 명령어"]  # Cog 리스트 추가
     if func is None:
         embed = discord.Embed(title="이모지 봇 도움말",
-                              description="접두사는 `!` 입니다. 자세한 내용은 `!도움말`\0`명령어`를 입력하시면 됩니다.")  # Embed 생성
+                              description="접두사는 `!` 입니다. 자세한 내용은 `!도움말`\0`명령어`를 입력하시면 됩니다.",
+                              color=discord.Colour.magenta())  # Embed 생성
         for x in cog_list:  # cog_list에 대한 반복문
             cog_data = bot.get_cog(x)  # x에 대해 Cog 데이터를 구하기
             command_list = cog_data.get_commands()  # cog_data에서 명령어 리스트 구하기
@@ -91,7 +92,8 @@ async def help_command(ctx, func=None):
                 for title in cog.get_commands():  # 명령어를 아까처럼 구하고 title에 순차적으로 넣습니다.
                     if title.name == func:  # title.name이 func와 같으면
                         cmd = bot.get_command(title.name)  # title의 명령어 데이터를 구합니다.
-                        embed = discord.Embed(title=f"명령어 : {cmd}", description=cmd.help, color=discord.Colour.green())  # Embed 만들기
+                        embed = discord.Embed(title=f"명령어 : {cmd}", description=cmd.help,
+                                              color=discord.Colour.green())  # Embed 만들기
                         embed.add_field(name="사용법", value=cmd.usage)  # 사용법 추가
                         await ctx.send(embed=embed, delete_after=30.0)  # 보내기
                         command_notfound = False
@@ -108,7 +110,8 @@ async def help_command(ctx, func=None):
                                 value=", ".join([c.name for c in command_list]))  # 명령어 리스트 join
                 await ctx.send(embed=embed, delete_after=30.0)  # 보내기
             else:
-                command_error = discord.Embed(title="명령어 오류", description="다음과 같은 에러가 발생했습니다.", color=0xFF0000)
+                command_error = discord.Embed(title="명령어 오류", description="다음과 같은 에러가 발생했습니다.",
+                                              color=discord.Colour.red())
                 command_error.add_field(name="사용한 명령어:\0" + ctx.message.content,
                                         value='`' + ctx.message.content + "`는 없습니다.", inline=False)
                 await ctx.send(embed=command_error, delete_after=7.0)
