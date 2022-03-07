@@ -1,3 +1,5 @@
+import discord.ui
+
 import DiscordEmbed
 import ImojiUtil
 import SQLUtil
@@ -68,6 +70,19 @@ class Emoji(commands.Cog, name="기본 명령어"):
         if isinstance(error.original, FileNotFoundError):
             discord_embed = DiscordEmbed.warning("이모지 없음", error.original)
         await ctx.send(embed=discord_embed)
+
+    @commands.command(name="디시콘", help="펀가놈의 디시콘을 사용할 수 있습니다.", usage="`~`\t`펀가놈 디시콘 명령어`")
+    async def funz_list(self, ctx):
+        view = discord.ui.View()
+        style = discord.ButtonStyle.blurple
+        item = discord.ui.Button(style=style, label="펀 가 이 동", url="https://funzinnu.com/dccon.html")
+        view.add_item(item)
+        discord_embed = DiscordEmbed.info("펀 가 이 동", "디시콘 명령어 리스트\n`~`\t`디시콘 명령어`로 사용할 수 있습니다")
+        await ctx.send(embed=discord_embed, view=view)
+
+    @commands.command(name="랜덤", help="서버에 등록되어있는 이모지 중 무작위 하나를 보여줍니다.", usage="`~랜덤`")
+    async def random_emoji(self, ctx):
+        return
 
 
 def setup(bot):

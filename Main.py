@@ -1,6 +1,7 @@
 import discord
 import DiscordEmbed
 import os
+import random
 import ImojiUtil
 import SQLUtil
 from discord.ext import commands
@@ -55,10 +56,23 @@ async def on_message(message: discord.Message):
     if message.content.startswith("~"):
         await message.delete()
         msg = message.content.replace("~", "")
+
+        if msg == "랜덤":
+            result = SQLUtil.emoji_search_all(message.guild.id)
+            emojiList = []
+            for emojiCommand in result:
+                emojiList.append(emojiCommand[1])
+            msg = random.choice(emojiList)
         result_args = SQLUtil.emoji_search(msg, message.guild.id)
+
+        if result_args is None:
+            result_args = SQLUtil.emoji_global_emoji_search(msg)
         if isinstance(result_args, tuple):
             discord_embed, image = await DiscordEmbed.picture(message, result_args[0])
-            await message.channel.send(embed=discord_embed, file=image)
+            if image is None:
+                await message.channel.send(embed=discord_embed)
+            else:
+                await message.channel.send(embed=discord_embed, file=image)
         else:
             discord_embed = DiscordEmbed.warning("이모지 없음", f"`{message.content}`는 이모지 리스트에 없습니다.")
             await message.channel.send(embed=discord_embed, delete_after=10.0)
@@ -155,4 +169,4 @@ async def reload_commands(extension=None):
         await bot_owner.send(f":white_check_mark: {extension}을(를) 다시 불러왔습니다!")
 
 
-bot.run('')
+bot.run('ODI5MzQ2MDA2NjA0MTg1NjAz.YG2yqA.fOnNgwK5E1MrryxSS2je-Hqu9gM')
