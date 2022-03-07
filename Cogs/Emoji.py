@@ -1,5 +1,4 @@
 import discord.ui
-
 import DiscordEmbed
 import ImojiUtil
 import SQLUtil
