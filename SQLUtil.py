@@ -76,6 +76,23 @@ def emoji_search(_emoji_command, _guildID: int):
     return result_arg
 
 
+def load_emoji_global_emoji():
+    print("global_emoji.db open...")
+    conn = sqlite3.connect("")
+
+    conn = sqlite3.connect(f"Guilds/funzEmoji.db", isolation_level=None)
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM emoji")
+    result_arg = cursor.fetchall()
+
+    print(f"global_emoji.db search complete and close...")
+    conn.close()
+
+    print("return tuple...")
+    return result_arg
+
+
 def emoji_global_emoji_search(_emoji_command):
     print("global_emoji.db open...")
     conn = sqlite3.connect("")

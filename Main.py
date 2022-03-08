@@ -59,10 +59,13 @@ async def on_message(message: discord.Message):
 
         if msg == "랜덤":
             result = SQLUtil.emoji_search_all(message.guild.id)
-            emojiList = []
-            for emojiCommand in result:
-                emojiList.append(emojiCommand[1])
-            msg = random.choice(emojiList)
+            global_result = SQLUtil.load_emoji_global_emoji()
+            emoji_list = []
+            for emoji_command in result:
+                emoji_list.append(emoji_command[1])
+            for emoji_command in global_result:
+                emoji_list.append(emoji_command[1])
+            msg = random.choice(emoji_list)
         result_args = SQLUtil.emoji_search(msg, message.guild.id)
 
         if result_args is None:
@@ -169,4 +172,4 @@ async def reload_commands(extension=None):
         await bot_owner.send(f":white_check_mark: {extension}을(를) 다시 불러왔습니다!")
 
 
-bot.run('ODI5MzQ2MDA2NjA0MTg1NjAz.YG2yqA.fOnNgwK5E1MrryxSS2je-Hqu9gM')
+bot.run('')

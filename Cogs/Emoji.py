@@ -71,12 +71,16 @@ class Emoji(commands.Cog, name="기본 명령어"):
 
     @commands.command(name="디시콘", help="펀가놈의 디시콘을 사용할 수 있습니다.", usage="`~`\t`펀가놈 디시콘 명령어`")
     async def funz_list(self, ctx):
+        await ctx.message.delete()
         discord_embed = DiscordEmbed.info("펀 가 이 동", "디시콘 명령어 리스트\n`~`\t`디시콘 명령어`로 사용할 수 있습니다"
                                                      "\nhttps://funzinnu.com/dccon.html")
-        await ctx.send(embed=discord_embed)
+        await ctx.send(embed=discord_embed, delete_after=30.0)
 
-    @commands.command(name="랜덤", help="서버에 등록되어있는 이모지 중 무작위 하나를 보여줍니다.", usage="`~랜덤`")
+    @commands.command(name="랜덤", help="이모지 중 무작위 하나를 보여줍니다.", usage="`~랜덤`")
     async def random_emoji(self, ctx):
+        await ctx.message.delete()
+        discord_embed = DiscordEmbed.warning("`~랜덤`을 사용해주세요.", "")
+        await ctx.send(embed=discord_embed, delete_after=10.0)
         return
 
 
