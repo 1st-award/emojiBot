@@ -8,7 +8,7 @@ class Select(commands.Cog, name="선택"):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="선택", help="선택 장애가 있는 당신에게 유용한 기능입니다", usage='`!선택\t`선택`\t`선택2')
+    @commands.command(name="선택", help="선택 장애가 있는 당신에게 유용한 기능입니다", usage='`!선택`\t`선택1`\t`선택2`...')
     async def select(self, ctx):
         await ctx.message.delete()
         args = ctx.message.content[4:].strip()
