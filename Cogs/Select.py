@@ -18,7 +18,11 @@ class Select(commands.Cog, name="선택"):
         for arg in args:
             command += arg + " VS "
         command = command[:-3]
+        user_name = ctx.message.author.nick
+        if user_name is None:
+            user_name = ctx.message.author.name
         discord_embed = DiscordEmbed.info(command, result)
+        discord_embed.set_author(name=user_name, icon_url=ctx.message.author.avatar_url)
         await ctx.send(embed=discord_embed, delete_after=60.0)
 
     @select.error

@@ -15,8 +15,11 @@ def complete(_title: str, _description: str):
 
 async def picture(_message: discord.Message, _emoji_file_name: str, image = None):
     # 디스코드에 올릴 파일을 지정하고, attachment에서 사용할 이름을 "image.png"로 지정
+    user_name = _message.author.nick
+    if user_name is None:
+        user_name = _message.author.name
     embed = discord.Embed(color=discord.Colour.dark_magenta())
-    embed.set_author(name=_message.author.name, icon_url=_message.author.avatar_url)
+    embed.set_author(name=user_name, icon_url=_message.author.avatar_url)
     if _emoji_file_name.startswith("https") or _emoji_file_name.startswith("http"):
         embed.set_image(url=_emoji_file_name)
     else:
