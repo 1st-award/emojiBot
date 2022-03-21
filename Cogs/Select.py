@@ -12,8 +12,13 @@ class Select(commands.Cog, name="선택"):
     async def select(self, ctx):
         await ctx.message.delete()
         args = ctx.message.content[4:].strip()
-        result = random.choice(list(map(str, args.split())))
-        discord_embed = DiscordEmbed.info("선택 결과", result)
+        args = list(map(str, args.split()))
+        result = random.choice(args)
+        command = ""
+        for arg in args:
+            command += arg + " VS "
+        command = command[:-3]
+        discord_embed = DiscordEmbed.info(command, result)
         await ctx.send(embed=discord_embed, delete_after=60.0)
 
     @select.error
