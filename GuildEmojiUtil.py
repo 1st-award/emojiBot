@@ -53,11 +53,12 @@ class SearchGuildClass:
 
 # db에 있는 길드 이미지를 램에 로드하기위한 class
 class GuildEmoji:
-    def __init__(self, _guildID: int):
+    def __init__(self, _guildID: int, _global_emoji_list):
         print(f"new guild emoji class {_guildID}...")
         self.guildID = _guildID
         print("load guild emoji command")
         self.emoji_tuple_list = SQLUtil.emoji_search_all(_guildID)
+        self.emoji_tuple_list.extend(_global_emoji_list)
         print(self.guildID, self.emoji_tuple_list)
 
     # 이미지 명령어를 통해 이미지 파일을 반환한다.

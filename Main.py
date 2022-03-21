@@ -172,4 +172,4 @@ async def reload_commands(extension=None):
         await bot_owner.send(f":white_check_mark: {extension}을(를) 다시 불러왔습니다!")
 
 
-bot.run('')
+bot.run('ODI5MzQ2MDA2NjA0MTg1NjAz.YG2yqA.U1LyOW6ufVVJFbv87sfbJB1F4ls')
