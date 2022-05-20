@@ -12,9 +12,11 @@ class Emoji(commands.Cog, name="기본 명령어"):
                                       "GIF 조건 `크기(3MB이하) 해상도(128X128이상)`", usage="`!등록`\t`명령어`\t`사진첨부`")
     async def emoji_register(self, ctx, emoji_command: str):
         await ctx.message.delete()
-        print(ctx.message.attachments[0].filename)
+        file_type = ctx.message.attachments[0].content_type.split("/")
+        file_name = str(ctx.message.attachments[0].id) + "." + file_type[1]
+
         ImojiUtil.is_support_format(ctx.message.attachments[0].filename)
-        SQLUtil.emoji_register(ctx.message.attachments[0].filename, emoji_command, ctx.guild.id)
+        SQLUtil.emoji_register(file_name, emoji_command, ctx.guild.id)
         await ImojiUtil.emoji_save(ctx.message.attachments[0], ctx.guild.id)
         discord_embed = DiscordEmbed.info("등록 완료", f"{emoji_command}이(가) 등록되었습니다.")
         await ctx.send(embed=discord_embed, delete_after=5.0)
@@ -61,7 +63,7 @@ class Emoji(commands.Cog, name="기본 명령어"):
         search_result = SQLUtil.emoji_search_all(ctx.guild.id)
         print(type(search_result), search_result)
         discord_embed = await DiscordEmbed.emoji_list(ctx.message, search_result)
-        await ctx.send(embed=discord_embed, delete_after=30.0)
+        await ctx.send(embed=discord_embed, delete_after=300.0)
 
     @emoji_list.error
     async def emoji_list_error(self, ctx, error: commands.errors.CommandInvokeError):
@@ -74,7 +76,7 @@ class Emoji(commands.Cog, name="기본 명령어"):
         await ctx.message.delete()
         discord_embed = DiscordEmbed.info("펀 가 이 동", "디시콘 명령어 리스트\n`~`\t`디시콘 명령어`로 사용할 수 있습니다"
                                                      "\nhttps://funzinnu.com/dccon.html")
-        await ctx.send(embed=discord_embed, delete_after=30.0)
+        await ctx.send(embed=discord_embed, delete_after=300.0)
 
     @commands.command(name="랜덤", help="이모지 중 무작위 하나를 보여줍니다.", usage="`~랜덤`")
     async def random_emoji(self, ctx):

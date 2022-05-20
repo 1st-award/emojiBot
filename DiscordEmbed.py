@@ -13,7 +13,7 @@ def complete(_title: str, _description: str):
     return discord.Embed(title=_title, description=_description, color=discord.Colour.blue())
 
 
-async def picture(_message: discord.Message, _emoji_file_name: str, image = None):
+async def picture(_message: discord.Message, _emoji_file_name: str, image=None):
     # 디스코드에 올릴 파일을 지정하고, attachment에서 사용할 이름을 "image.png"로 지정
     user_name = _message.author.nick
     if user_name is None:

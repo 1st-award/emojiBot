@@ -6,14 +6,17 @@ from PIL import Image
 
 
 async def emoji_save(_emoji: discord.Attachment, _guildID: int):
+    file_type = _emoji.content_type.split("/")
+    file_name = str(_emoji.id) + "." + file_type[1]
+
     print("emoji save...")
-    await _emoji.save(f"Emoji/{_guildID}/{_emoji.filename}")
+    await _emoji.save(f"Emoji/{_guildID}/{file_name}")
     print("emoji save complete")
 
     if not _emoji.filename.endswith(".gif"):
-        emoji_resize_normal(_emoji.filename, _guildID)
+        emoji_resize_normal(file_name, _guildID)
     else:
-        emoji_resize_gif(_emoji.filename, _guildID)
+        emoji_resize_gif(file_name, _guildID)
 
 
 def emoji_remove(_emoji_filename: str, _guildID: int):

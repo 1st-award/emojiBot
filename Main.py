@@ -1,10 +1,13 @@
+import asyncio
 import discord
 import DiscordEmbed
 import os
 import random
+import threading
 import ImojiUtil
 import SQLUtil
 from discord.ext import commands
+from Cogs import Select
 
 # 봇 권한 부여
 intents = discord.Intents(messages=True, guilds=True, members=True)
@@ -51,7 +54,13 @@ async def on_guild_remove(guild: discord.Guild):
 @bot.event
 async def on_message(message: discord.Message):
     if message.author.bot:
-        return
+        return    
+    # 승민아조시 전용 리액션
+    #if message.author.id == 332822538373562375:
+    #    emoji_list = ["🇸", "🇪", "🇽", "🐧", "👍"]
+    #    for emoji in emoji_list:
+    #        await message.add_reaction(emoji)
+
 
     if message.content.startswith("~"):
         await message.delete()
@@ -172,4 +181,4 @@ async def reload_commands(extension=None):
         await bot_owner.send(f":white_check_mark: {extension}을(를) 다시 불러왔습니다!")
 
 
-bot.run('ODI5MzQ2MDA2NjA0MTg1NjAz.YG2yqA.U1LyOW6ufVVJFbv87sfbJB1F4ls')
+bot.run('ODI5MzQ2MDA2NjA0MTg1NjAz.YG2yqA.cc2fgvs26QoCmSNzjxGOblb7v14')
