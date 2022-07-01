@@ -5,9 +5,9 @@ from discord.ext import commands
 
 
 async def join_channel(message: discord.Message):
-    voicechannel = message.author.voice.channel
+    voice_channel = message.author.voice.channel
     try:
-        await voicechannel.connect(reconnect=True)
+        await voice_channel.connect(reconnect=True)
     except:
         pass
 
