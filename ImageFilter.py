@@ -83,7 +83,7 @@ def create_color_arr(length):
 
 def draw_value_bar_top(result_val_arr, y):
     for i, v in enumerate(result_val_arr):
-        if v < 1.0:
+        if v < 0.9:
             continue
         plt.text(v, y[i], result_val_arr[i],  # 좌표 (x축 = v, y축 = y[0]..y[1], 표시 = y[0]..y[1])
                  fontsize=9,

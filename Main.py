@@ -1,21 +1,21 @@
-import asyncio
 import discord
 import DiscordEmbed
 import os
 import random
-import threading
 
 import ImageFilter
 import ImojiUtil
 import SQLUtil
 from discord.ext import commands
-from Cogs import Select
 
 # 봇 권한 부여
 intents = discord.Intents(messages=True, guilds=True, members=True)
 bot = commands.Bot(command_prefix='!', intents=intents)
 # !도움말을 위한 기존에 있는 help 제거
 bot.remove_command('help')
+# 이미지 분석 결과 출력 스위치
+image_filter_result_img_switch = False
+image_remove_switch = True
 
 # Cogs Load
 for filename in os.listdir("Cogs"):
@@ -62,11 +62,21 @@ async def on_message(message: discord.Message):
     #    emoji_list = ["🇸", "🇪", "🇽", "🐧", "👍"]
     #    for emoji in emoji_list:
     #        await message.add_reaction(emoji)
+    if message.content.startswith("!끄기"):
+        image_remove_switch = False
+    if message.content.startswith("!이미지끄기"):
+        image_filter_result_img_switch = False
+    if message.content.startswith("!켜지"):
+        image_remove_switch = True
+    if message.content.startswith("!이미지켜기"):
+        image_filter_result_img_switch = True
 
     if len(message.attachments) != 0:
-        image, image_path = await ImageFilter.predict_image(message.attachments[0])
-        await message.reply(file=image)
-        ImageFilter.remove_image(image_path)
+        if image_filter_result_img_switch:
+            image, image_path = await ImageFilter.predict_image(message.attachments[0])
+            await message.reply(file=image)
+        if image_remove_switch:
+            ImageFilter.remove_image(image_path)
 
     if message.content.startswith("~"):
         await message.delete()
