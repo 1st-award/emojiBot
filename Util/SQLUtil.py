@@ -61,7 +61,7 @@ def emoji_global_emoji_search(_emoji_command):
 
 def emoji_search_all(_guildID: int):
     print(f"{_guildID}.db searching all emoji...")
-    cursor.execute("SELECT * FROM emoji")
+    cursor.execute("SELECT * FROM emoji WHERE guild=?", (_guildID,))
     result_arg = cursor.fetchall()
     if len(result_arg) == 0:
         raise FileNotFoundError("등록된 이모지 명령어가 없습니다. `!등록`을 통해 이모지를 등록해주세요.")
