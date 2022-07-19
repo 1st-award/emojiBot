@@ -52,7 +52,7 @@ def load_emoji_global_emoji(_guildID: int):
 
 def emoji_global_emoji_search(_emoji_command):
     print(f"global_emoji.db searching {_emoji_command}...")
-    cursor.execute("SELECT * FROM emoji WHERE command='%s'" % _emoji_command)
+    cursor.execute("SELECT path FROM emoji WHERE guild=-1 and command='%s'" % _emoji_command)
     result_arg = cursor.fetchone()
     print(f"global_emoji.db search complete and close...")
     print("return tuple...")
