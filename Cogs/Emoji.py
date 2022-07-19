@@ -1,6 +1,4 @@
-import DiscordEmbed
-import ImojiUtil
-import SQLUtil
+from Util import DiscordEmbed, ImojiUtil, SQLUtil
 from discord.ext import commands
 
 
@@ -16,8 +14,8 @@ class Emoji(commands.Cog, name="기본 명령어"):
         file_name = str(ctx.message.attachments[0].id) + "." + file_type[1]
 
         ImojiUtil.is_support_format(ctx.message.attachments[0].filename)
-        SQLUtil.emoji_register(file_name, emoji_command, ctx.guild.id)
-        await ImojiUtil.emoji_save(ctx.message.attachments[0], ctx.guild.id)
+        SQLUtil.register_emoji(file_name, emoji_command, ctx.guild.id)
+        await ImojiUtil.save_emoji(ctx.message.attachments[0], ctx.guild.id)
         discord_embed = DiscordEmbed.info("등록 완료", f"{emoji_command}이(가) 등록되었습니다.")
         await ctx.send(embed=discord_embed, delete_after=5.0)
 

@@ -1,12 +1,8 @@
 import discord
-import DiscordEmbed
 import os
 import random
-
-import ImageFilter
-import ImojiUtil
-import SQLUtil
 from discord.ext import commands
+from Util import DiscordEmbed, ImojiUtil, SQLUtil
 
 # 봇 권한 부여
 intents = discord.Intents(messages=True, guilds=True, members=True)
@@ -36,7 +32,6 @@ async def on_ready():
 # 봇이 길드에 들어갔을 때
 @bot.event
 async def on_guild_join(guild):
-    SQLUtil.new_guild_join(guild.id)
     for channel in guild.text_channels:
         if channel.permissions_for(guild.me).send_messages:
             discord_embed = DiscordEmbed.info('봇 참가', '이모지 봇이 참여했습니다. 명령어는 `!도움말`입니다')
@@ -62,21 +57,21 @@ async def on_message(message: discord.Message):
     #    emoji_list = ["🇸", "🇪", "🇽", "🐧", "👍"]
     #    for emoji in emoji_list:
     #        await message.add_reaction(emoji)
-    if message.content.startswith("!끄기"):
-        image_remove_switch = False
-    if message.content.startswith("!이미지끄기"):
-        image_filter_result_img_switch = False
-    if message.content.startswith("!켜지"):
-        image_remove_switch = True
-    if message.content.startswith("!이미지켜기"):
-        image_filter_result_img_switch = True
-
-    if len(message.attachments) != 0:
-        if image_filter_result_img_switch:
-            image, image_path = await ImageFilter.predict_image(message.attachments[0])
-            await message.reply(file=image)
-        if image_remove_switch:
-            ImageFilter.remove_image(image_path)
+    # if message.content.startswith("!끄기"):
+    #     image_remove_switch = False
+    # if message.content.startswith("!이미지끄기"):
+    #     image_filter_result_img_switch = False
+    # if message.content.startswith("!켜지"):
+    #     image_remove_switch = True
+    # if message.content.startswith("!이미지켜기"):
+    #     image_filter_result_img_switch = True
+    #
+    # if len(message.attachments) != 0:
+    #     if image_filter_result_img_switch:
+    #         image, image_path = await ImageFilter.predict_image(message.attachments[0])
+    #         await message.reply(file=image)
+    #     if image_remove_switch:
+    #         ImageFilter.remove_image(image_path)
 
     if message.content.startswith("~"):
         await message.delete()
@@ -197,4 +192,4 @@ async def reload_commands(extension=None):
         await bot_owner.send(f":white_check_mark: {extension}을(를) 다시 불러왔습니다!")
 
 
-bot.run('')
+bot.run(os.environ['BETA_BOT_TOKEN'])

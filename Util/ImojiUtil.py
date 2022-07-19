@@ -1,11 +1,11 @@
 import discord
-import GIFConvert
+from Util import GIFConvert
 import os
 import shutil
 from PIL import Image
 
 
-async def emoji_save(_emoji: discord.Attachment, _guildID: int):
+async def save_emoji(_emoji: discord.Attachment, _guildID: int):
     file_type = _emoji.content_type.split("/")
     file_name = str(_emoji.id) + "." + file_type[1]
 

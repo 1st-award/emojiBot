@@ -1,7 +1,7 @@
-import DiscordEmbed
 import discord
 import random
 from discord.ext import commands
+from Util import DiscordEmbed
 
 
 async def join_channel(message: discord.Message):

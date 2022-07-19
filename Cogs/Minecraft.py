@@ -1,10 +1,8 @@
 import asyncio
-import socket
-
 import discord
-
-import DiscordEmbed
+import socket
 from discord.ext import commands
+from Util import DiscordEmbed
 
 
 async def request_server(send_msg=None):
