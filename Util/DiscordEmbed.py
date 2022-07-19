@@ -43,7 +43,7 @@ async def emoji_list(_message: discord.Message, _search_result_list: list):
         async def __anext__(self):
             print(f"run async for...current {self.current} until {self.stop}")
             if self.current < self.stop:
-                self.emoji_command_str += "`" + _search_result_list[self.current][1] + "`\t"
+                self.emoji_command_str += "`" + _search_result_list[self.current][2] + "`\t"
                 self.current += 1
                 return self.emoji_command_str
             else:
