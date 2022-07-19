@@ -8,7 +8,9 @@ class Emoji(commands.Cog, name="기본 명령어"):
 
     @commands.command(name="등록", help="`명령어로 쓸 단어`와 `사진`을 첨부해주세요! (지원 파일: `jpg`, `png`, `gif`)\n"
                                       "GIF 조건 `크기(3MB이하) 해상도(128X128이상)`", usage="`!등록`\t`명령어`\t`사진첨부`")
-    async def emoji_register(self, ctx, emoji_command: str):
+    async def emoji_register(self, ctx, *emoji_commands: tuple, emoji_command: str = ""):
+        for command in emoji_commands:
+            emoji_command += ''.join(command)
         await ctx.message.delete()
         file_type = ctx.message.attachments[0].content_type.split("/")
         file_name = str(ctx.message.attachments[0].id) + "." + file_type[1]
