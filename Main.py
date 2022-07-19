@@ -6,7 +6,7 @@ from Util import DiscordEmbed, ImojiUtil, SQLUtil
 
 # 봇 권한 부여
 intents = discord.Intents(messages=True, guilds=True, members=True)
-bot = commands.Bot(command_prefix='!', intents=intents)
+bot = commands.Bot(command_prefix='@', intents=intents)
 # !도움말을 위한 기존에 있는 help 제거
 bot.remove_command('help')
 # 이미지 분석 결과 출력 스위치
@@ -32,6 +32,8 @@ async def on_ready():
 # 봇이 길드에 들어갔을 때
 @bot.event
 async def on_guild_join(guild):
+    ImojiUtil.emoji_dir_create(guild.id)
+    SQLUtil.insert_guild(guild.id)
     for channel in guild.text_channels:
         if channel.permissions_for(guild.me).send_messages:
             discord_embed = DiscordEmbed.info('봇 참가', '이모지 봇이 참여했습니다. 명령어는 `!도움말`입니다')
@@ -42,10 +44,10 @@ async def on_guild_join(guild):
 # 봇이 길드에서 삭제될 때
 @bot.event
 async def on_guild_remove(guild: discord.Guild):
-    print("delete all documents...")
-    await ImojiUtil.emoji_dir_remove(guild.id)
-    await SQLUtil.emoji_db_remove(guild.id)
-    print("delete complete")
+    print("remove data before quit...")
+    ImojiUtil.emoji_dir_remove(guild.id)
+    SQLUtil.remove_guild(guild.id)
+    print("remove success")
 
 
 @bot.event
@@ -73,9 +75,9 @@ async def on_message(message: discord.Message):
     #     if image_remove_switch:
     #         ImageFilter.remove_image(image_path)
 
-    if message.content.startswith("~"):
+    if message.content.startswith("`"):
         await message.delete()
-        msg = message.content.replace("~", "")
+        msg = message.content.replace("`", "")
 
         if msg == "랜덤":
             result = SQLUtil.emoji_search_all(message.guild.id)

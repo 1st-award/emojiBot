@@ -25,6 +25,12 @@ def emoji_remove(_emoji_filename: str, _guildID: int):
     print("emoji remove complete...")
 
 
+def emoji_dir_create(_guildID: int):
+    print(f"create Emoji/{_guildID} folder...")
+    os.mkdir(f"Emoji/{_guildID}")
+    print(f"create folder complete")
+
+
 def emoji_dir_remove(_guildID: int):
     print(f"removing emoji dir {_guildID}...")
     shutil.rmtree(f"Emoji/{_guildID}")

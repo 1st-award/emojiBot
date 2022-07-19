@@ -1,9 +1,21 @@
-import sqlite3
 import os
+import sqlite3
 
 back_slash = "\\"
 conn = sqlite3.connect(f"{os.getcwd().replace(back_slash, '/')}/Emoji/emoji.db", isolation_level=None)
 cursor = conn.cursor()
+
+
+def insert_guild(_guildID: int):
+    print(f"insert {_guildID}...")
+    cursor.execute("INSERT INTO guild(guild) VALUES(?)", (_guildID,))
+    print(f"insert success")
+
+
+def remove_guild(_guildID: int):
+    print(f"remove {_guildID}...")
+    cursor.execute("DELETE FROM guild WHERE guild=?", (_guildID,))
+    print(f"remove success")
 
 
 def register_emoji(_filename: str, _emoji_command: str, _guildID: int):
