@@ -1,15 +1,15 @@
 import discord
 
 
-def info(_title: str, _description: str):
+def info(_title: str, _description: str = ""):
     return discord.Embed(title=_title, description=_description, color=discord.Colour.green())
 
 
-def warning(_title: str, _description: str):
+def warning(_title: str, _description: str = ""):
     return discord.Embed(title=_title, description=_description, color=discord.Colour.red())
 
 
-def complete(_title: str, _description: str):
+def complete(_title: str, _description: str = ""):
     return discord.Embed(title=_title, description=_description, color=discord.Colour.blue())
 
 

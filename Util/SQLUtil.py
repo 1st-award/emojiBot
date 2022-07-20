@@ -6,6 +6,10 @@ conn = sqlite3.connect(f"{os.getcwd().replace(back_slash, '/')}/Emoji/emoji.db",
 cursor = conn.cursor()
 
 
+def set_foreign_key():
+    conn.execute("PRAGMA FOREIGN_KEYS = ON")
+
+
 def insert_guild(_guildID: int):
     print(f"insert {_guildID}...")
     cursor.execute("INSERT INTO guild(guild) VALUES(?)", (_guildID,))
@@ -14,6 +18,7 @@ def insert_guild(_guildID: int):
 
 def remove_guild(_guildID: int):
     print(f"remove {_guildID}...")
+    set_foreign_key()
     cursor.execute("DELETE FROM guild WHERE guild=?", (_guildID,))
     print(f"remove success")
 
@@ -43,8 +48,8 @@ def emoji_search(_emoji_command, _guildID: int):
     return search_result
 
 
-def load_emoji_global_emoji(_guildID: int):
-    cursor.execute("SELECT * FROM emoji WHERE guild=?", _guildID)
+def load_emoji_global_emoji():
+    cursor.execute("SELECT * FROM emoji WHERE guild=-1")
     result_arg = cursor.fetchall()
     print("return ")
     return result_arg
@@ -52,7 +57,7 @@ def load_emoji_global_emoji(_guildID: int):
 
 def emoji_global_emoji_search(_emoji_command):
     print(f"global_emoji.db searching {_emoji_command}...")
-    cursor.execute("SELECT path FROM emoji WHERE guild=-1 and command='%s'" % _emoji_command)
+    cursor.execute("SELECT path FROM emoji WHERE guild=-1 and command LIKE ?", (f"%{_emoji_command}%",))
     result_arg = cursor.fetchone()
     print(f"global_emoji.db search complete and close...")
     print("return tuple...")
@@ -67,3 +72,9 @@ def emoji_search_all(_guildID: int):
         raise FileNotFoundError("등록된 이모지 명령어가 없습니다. `!등록`을 통해 이모지를 등록해주세요.")
     print("return tuple list...")
     return result_arg
+
+
+def emoji_insert_all(_guildID: int, emoji_args: list):
+    print(f"insert emojis arg of {_guildID}")
+    cursor.executemany("INSERT INTO emoji(guild, path, command) VALUES(?, ?, ?)", emoji_args)
+    print("insert emojis success")

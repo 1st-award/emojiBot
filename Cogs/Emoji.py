@@ -1,3 +1,4 @@
+import functools
 from Util import DiscordEmbed, ImojiUtil, SQLUtil
 from discord.ext import commands
 
@@ -10,7 +11,7 @@ class Emoji(commands.Cog, name="기본 명령어"):
                                       "GIF 조건 `크기(3MB이하) 해상도(128X128이상)`", usage="`!등록`\t`명령어`\t`사진첨부`")
     async def emoji_register(self, ctx, *emoji_commands: tuple, emoji_command: str = ""):
         for command in emoji_commands:
-            emoji_command += ''.join(command)
+            emoji_command += ', '.join(command)
         await ctx.message.delete()
         file_type = ctx.message.attachments[0].content_type.split("/")
         file_name = str(ctx.message.attachments[0].id) + "." + file_type[1]
@@ -83,7 +84,29 @@ class Emoji(commands.Cog, name="기본 명령어"):
         await ctx.message.delete()
         discord_embed = DiscordEmbed.warning("`~랜덤`을 사용해주세요.", "")
         await ctx.send(embed=discord_embed, delete_after=10.0)
-        return
+
+    @commands.command(name="복사", usage="`!복사`\t`To 길드ID`\t`From 길드ID`")
+    @commands.has_permissions(administrator=True)
+    async def copy_imoji(self, ctx, toGuildID: int, fromGuildID: int):
+        await ctx.message.delete()
+        SQLUtil.remove_guild(fromGuildID)
+        SQLUtil.insert_guild(fromGuildID)
+        imoji_args = SQLUtil.emoji_search_all(toGuildID)
+        imoji_args = list(map(functools.partial(self.switch_guild, guild=fromGuildID), imoji_args))
+        SQLUtil.emoji_insert_all(fromGuildID, imoji_args)
+        ImojiUtil.emoji_dir_copy(toGuildID, fromGuildID)
+        discord_embed = DiscordEmbed.info("복사 완료")
+        await ctx.send(embed=discord_embed, delete_after=3.0)
+
+    @copy_imoji.error
+    async def merge_imoji_error(self, ctx, error: commands.errors.CommandInvokeError):
+        discord_embed = DiscordEmbed.warning("머지 애러 발생", error.__traceback__)
+        await ctx.send(embed=discord_embed, delete_after=5.0)
+
+    def switch_guild(self, imoji: tuple, guild: int):
+        list_imoji = list(imoji)
+        list_imoji[0] = guild
+        return tuple(list_imoji)
 
 
 def setup(bot):

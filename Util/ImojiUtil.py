@@ -37,6 +37,13 @@ def emoji_dir_remove(_guildID: int):
     print(f"remove {_guildID} complete")
 
 
+def emoji_dir_copy(toGuildID: int, fromGuildID: int):
+    print("try to copy")
+    emoji_dir_remove(fromGuildID)
+    shutil.copytree(f"Emoji/{toGuildID}", f"Emoji/{fromGuildID}")
+    print("copy success")
+
+
 # TODO 일반 사진도 변환 후 3MB가 넘어갈 수 있으므로 검사하는 함수 만들기
 def emoji_resize_normal(_emoji_filename: str, _guildID: int):
     print(f"normal resizing {_emoji_filename}...")

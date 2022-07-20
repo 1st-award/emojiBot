@@ -84,12 +84,11 @@ async def on_message(message: discord.Message):
             global_result = SQLUtil.load_emoji_global_emoji()
             emoji_list = []
             for emoji_command in result:
-                emoji_list.append(emoji_command[1])
+                emoji_list.append(emoji_command[2])
             for emoji_command in global_result:
-                emoji_list.append(emoji_command[1])
+                emoji_list.append(emoji_command[2])
             msg = random.choice(emoji_list)
         result_args = SQLUtil.emoji_search(msg, message.guild.id)
-
         if result_args is None:
             result_args = SQLUtil.emoji_global_emoji_search(msg)
         if isinstance(result_args, tuple):
