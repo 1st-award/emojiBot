@@ -99,7 +99,7 @@ class Emoji(commands.Cog, name="기본 명령어"):
         await ctx.send(embed=discord_embed, delete_after=3.0)
 
     @copy_imoji.error
-    async def merge_imoji_error(self, ctx, error: commands.errors.CommandInvokeError):
+    async def copy_imoji_error(self, ctx, error: commands.errors.CommandInvokeError):
         discord_embed = DiscordEmbed.warning("머지 애러 발생", error.__traceback__)
         await ctx.send(embed=discord_embed, delete_after=5.0)
 

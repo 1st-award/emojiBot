@@ -6,7 +6,7 @@ from Util import DiscordEmbed, ImojiUtil, SQLUtil
 
 # 봇 권한 부여
 intents = discord.Intents(messages=True, guilds=True, members=True)
-bot = commands.Bot(command_prefix='@', intents=intents)
+bot = commands.Bot(command_prefix='!', intents=intents)
 # !도움말을 위한 기존에 있는 help 제거
 bot.remove_command('help')
 # 이미지 분석 결과 출력 스위치
@@ -75,9 +75,9 @@ async def on_message(message: discord.Message):
     #     if image_remove_switch:
     #         ImageFilter.remove_image(image_path)
 
-    if message.content.startswith("`"):
+    if message.content.startswith("~"):
         await message.delete()
-        msg = message.content.replace("`", "")
+        msg = message.content.replace("~", "")
 
         if msg == "랜덤":
             result = SQLUtil.emoji_search_all(message.guild.id)
@@ -94,13 +94,12 @@ async def on_message(message: discord.Message):
         if isinstance(result_args, tuple):
             discord_embed, image = await DiscordEmbed.picture(message, result_args[0])
             if image is None:
-                await message.channel.send(embed=discord_embed)
+                await message.channel.send(embed=discord_embed, reference=message.reference)
             else:
-                await message.channel.send(embed=discord_embed, file=image)
+                await message.channel.send(embed=discord_embed, file=image, reference=message.reference)
         else:
             discord_embed = DiscordEmbed.warning("이모지 없음", f"`{message.content}`는 이모지 리스트에 없습니다.")
-            await message.channel.send(embed=discord_embed, delete_after=10.0)
-
+            await message.channel.send(embed=discord_embed, reference=message.reference, delete_after=10.0)
     # 기존에 작성한 명령어로 이동
     await bot.process_commands(message)
 
