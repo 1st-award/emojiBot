@@ -25,19 +25,10 @@ class Bot(commands.Bot):
         await self.tree.sync(guild=MY_GUILD)
 
 
-class Help(commands.MinimalHelpCommand):
-    async def send_pages(self) -> None:
-        destination = self.get_destination()
-        for page in self.paginator.pages:
-            embed = discord.Embed(destination=page)
-            await destination.send(embed=embed)
-
-
 intents = discord.Intents.all()
 bot = Bot(intents=intents)
 # !도움말을 위한 기존에 있는 help 제거
 bot.remove_command('help')
-
 # 이미지 분석 결과 출력 스위치
 image_filter_result_img_switch = False
 image_remove_switch = True
