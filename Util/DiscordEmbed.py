@@ -19,7 +19,7 @@ async def picture(_message: discord.Message, _emoji_file_name: str, image=None):
     if user_name is None:
         user_name = _message.author.name
     embed = discord.Embed(color=discord.Colour.dark_magenta())
-    embed.set_author(name=user_name, icon_url=_message.author.avatar_url)
+    embed.set_author(name=user_name, icon_url=_message.author.avatar.url)
     if _emoji_file_name.startswith("https") or _emoji_file_name.startswith("http"):
         embed.set_image(url=_emoji_file_name)
     else:
@@ -28,7 +28,7 @@ async def picture(_message: discord.Message, _emoji_file_name: str, image=None):
     return embed, image
 
 
-async def emoji_list(_message: discord.Message, _search_result_list: list):
+async def emoji_list(_search_result_list: list):
     print("start make emoji list...")
 
     class IndexCommand:

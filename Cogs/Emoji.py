@@ -3,7 +3,7 @@ import functools
 
 import discord
 
-from Util import DiscordEmbed, ImojiUtil, SQLUtil
+from Util import DiscordEmbed, ImojiUtil, SQLUtil, DiscordUI
 from discord import app_commands
 from discord.ext import commands
 
@@ -92,9 +92,10 @@ class Emoji(commands.Cog, name="기본 명령어"):
 
     @app_commands.command(name="디시콘", description="펀가놈의 디시콘을 사용할 수 있습니다.")
     async def funz_list(self, interaction: discord.Interaction):
-        discord_embed = DiscordEmbed.info("펀 가 이 동", "디시콘 명령어 리스트\n`~`\t`디시콘 명령어`로 사용할 수 있습니다"
-                                                     "\nhttps://funzinnu.com/dccon.html")
-        await interaction.response.send_message(embed=discord_embed)
+        discord_embed = DiscordEmbed.info("펀 가 이 동", "디시콘 명령어 리스트\n`~`\t`디시콘 명령어`로 사용할 수 있습니다")
+        await interaction.response.send_message(embed=discord_embed,
+                                                view=DiscordUI.LinkButton("펀 가 이 동", "https://funzinnu.com/dccon.html")
+                                                )
         await asyncio.sleep(300)
         await interaction.delete_original_message()
 

@@ -5,18 +5,31 @@ from discord.ext import commands
 from Util import DiscordEmbed, ImojiUtil, SQLUtil
 
 # 봇 권한 부여
-intents = discord.Intents(messages=True, guilds=True, members=True)
-bot = commands.Bot(command_prefix='!', intents=intents)
+MY_GUILD = discord.Object(id=349181108669382657)
+
+
+class Bot(commands.Bot):
+    def __init__(self, *, intents: discord.Intents):
+        super().__init__(command_prefix='.', intents=intents)
+
+    async def setup_hook(self):
+        # Cogs Load
+        for filename in os.listdir("Cogs"):
+            if filename.endswith(".py"):
+                await bot.load_extension(f"Cogs.{filename[:-3]}")
+        # This copies the global commands over to your guild.
+        self.tree.copy_global_to(guild=MY_GUILD)
+        await self.tree.sync(guild=MY_GUILD)
+
+
+intents = discord.Intents.all()
+bot = Bot(intents=intents)
 # !도움말을 위한 기존에 있는 help 제거
 bot.remove_command('help')
+
 # 이미지 분석 결과 출력 스위치
 image_filter_result_img_switch = False
 image_remove_switch = True
-
-# Cogs Load
-for filename in os.listdir("Cogs"):
-    if filename.endswith(".py"):
-        bot.load_extension(f"Cogs.{filename[:-3]}")
 
 
 # 봇 준비
@@ -160,7 +173,7 @@ async def help_command(ctx, func=None):
 async def load_commands(extension):
     # 봇 오너
     bot_owner = bot.get_user(276532581829181441)
-    bot.load_extension(f"Cogs.{extension}")
+    await bot.load_extension(f"Cogs.{extension}")
     await bot_owner.send(f":white_check_mark: {extension}을(를) 로드했습니다!")
 
 
@@ -170,7 +183,7 @@ async def load_commands(extension):
 async def unload_commands(extension):
     # 봇 오너
     bot_owner = bot.get_user(276532581829181441)
-    bot.unload_extension(f"Cogs.{extension}")
+    await bot.unload_extension(f"Cogs.{extension}")
     await bot_owner.send(f":white_check_mark: {extension}을(를) 언로드했습니다!")
 
 
@@ -183,12 +196,12 @@ async def reload_commands(extension=None):
     if extension is None:  # extension이 None이면 (그냥 !리로드 라고 썼을 때)
         for filename in os.listdir("Cogs"):
             if filename.endswith(".py"):
-                bot.unload_extension(f"Cogs.{filename[:-3]}")
-                bot.load_extension(f"Cogs.{filename[:-3]}")
+                await bot.unload_extension(f"Cogs.{filename[:-3]}")
+                await bot.load_extension(f"Cogs.{filename[:-3]}")
         await bot_owner.send(":white_check_mark: 모든 명령어를 다시 불러왔습니다!")
     else:
-        bot.unload_extension(f"Cogs.{extension}")
-        bot.load_extension(f"Cogs.{extension}")
+        await bot.unload_extension(f"Cogs.{extension}")
+        await bot.load_extension(f"Cogs.{extension}")
         await bot_owner.send(f":white_check_mark: {extension}을(를) 다시 불러왔습니다!")
 
 
