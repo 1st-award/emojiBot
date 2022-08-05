@@ -151,29 +151,31 @@ async def help_command(interaction: discord.Interaction, command: str = None):
 
 
 # Cogs 파일(.py)을 로드
-@bot.command(name="로드")
-@commands.has_permissions(administrator=True)
-async def load_commands(extension):
+@bot.tree.command(name="로드")
+@app_commands.checks.has_permissions(administrator=True)
+async def load_commands(interaction: discord.Interaction, extension: str):
     # 봇 오너
     bot_owner = bot.get_user(276532581829181441)
     await bot.load_extension(f"Cogs.{extension}")
     await bot_owner.send(f":white_check_mark: {extension}을(를) 로드했습니다!")
+    await interaction.response.send_message("Load OK")
 
 
 # Cogs 파일(.py)을 언로드
-@bot.command(name="언로드")
-@commands.has_permissions(administrator=True)
-async def unload_commands(extension):
+@bot.tree.command(name="언로드")
+@app_commands.checks.has_permissions(administrator=True)
+async def unload_commands(interaction: discord.Interaction, extension: str):
     # 봇 오너
     bot_owner = bot.get_user(276532581829181441)
     await bot.unload_extension(f"Cogs.{extension}")
     await bot_owner.send(f":white_check_mark: {extension}을(를) 언로드했습니다!")
+    await interaction.response.send_message("Unload OK")
 
 
 # Cogs 파일(.py)을 리로드
-@bot.command(name="리로드")
-@commands.has_permissions(administrator=True)
-async def reload_commands(extension=None):
+@bot.tree.command(name="리로드")
+@app_commands.checks.has_permissions(administrator=True)
+async def reload_commands(interaction: discord.Interaction, extension: str = None):
     # 봇 오너
     bot_owner = bot.get_user(276532581829181441)
     if extension is None:  # extension이 None이면 (그냥 !리로드 라고 썼을 때)
@@ -186,6 +188,7 @@ async def reload_commands(extension=None):
         await bot.unload_extension(f"Cogs.{extension}")
         await bot.load_extension(f"Cogs.{extension}")
         await bot_owner.send(f":white_check_mark: {extension}을(를) 다시 불러왔습니다!")
+    await interaction.response.send_message("Reload OK")
 
 
 bot.run(os.environ['BETA_BOT_TOKEN'])
