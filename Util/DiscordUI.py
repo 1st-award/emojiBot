@@ -29,7 +29,7 @@ class ReportButton(discord.ui.View):
         await interaction.delete_original_message()
 
 
-class ReportModal(discord.ui.Modal, title="신고하기"):
+class ReportModal(discord.ui.Modal, title="신고"):
     def __init__(self, bot: commands.Bot, message: discord.Message):
         super().__init__()
         self.bot = bot
@@ -38,6 +38,7 @@ class ReportModal(discord.ui.Modal, title="신고하기"):
     report_type = discord.ui.Select(
         options=[discord.SelectOption(label="욕설"),
                  discord.SelectOption(label="성희롱"),
+                 discord.SelectOption(label="채팅 도배"),
                  discord.SelectOption(label="기타")
                  ]
     )
@@ -62,7 +63,7 @@ class ReportModal(discord.ui.Modal, title="신고하기"):
                                               f"상세 내용: {self.report_details.value}\n"
                                               f"신고 대상: {author_name}\n"
                                               f"메시지 내용: {self.message.content}\n"
-                                              f"해당 메시지로 가기: {self.message.jump_url}\n"
                                      )
-        await owner.send(embed=embed)
+        url_view = LinkButton(label="해당 메시지로 가기", url=self.message.jump_url)
+        await owner.send(embed=embed, view=url_view)
         await interaction.response.send_message("신고해 주셔서 감사합니다!", ephemeral=True)

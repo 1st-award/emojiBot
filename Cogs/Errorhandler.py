@@ -14,7 +14,7 @@ class Errorhandler(commands.Cog):
     async def on_app_command_error(self, interaction: discord.Interaction, error: AppCommandError):
         print(error)
         embed = DiscordEmbed.warning("알 수 없는 애러", error)
-        await interaction.response.send_message(embed=embed, view=DiscordUI.ReportButton(self.bot, error))
+        await interaction.response.send_message(embed=embed, view=DiscordUI.ReportButton(self.bot, error), ephemeral=True)
 
 
 async def setup(bot):

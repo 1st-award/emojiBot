@@ -149,7 +149,7 @@ async def help_command(interaction: discord.Interaction, command: str = None):
     await interaction.delete_original_message()
 
 
-@bot.tree.context_menu(name="신고")
+@bot.tree.context_menu(name="신고하기")
 async def report_message(interaction: discord.Interaction, message: discord.Message):
     await interaction.response.send_modal(DiscordUI.ReportModal(bot, message))
 
@@ -195,4 +195,4 @@ async def reload_commands(interaction: discord.Interaction, extension: str = Non
     await interaction.response.send_message("Reload OK", ephemeral=True)
 
 
-bot.run(os.environ['BETA_BOT_TOKEN'])
+bot.run(os.environ["BETA_BOT_TOKEN"])
