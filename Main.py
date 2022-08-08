@@ -5,7 +5,7 @@ import random
 
 from discord import app_commands
 from discord.ext import commands
-from Util import DiscordEmbed, ImojiUtil, SQLUtil
+from Util import DiscordEmbed, ImojiUtil, SQLUtil, DiscordUI
 
 # 봇 권한 부여
 MY_GUILD = discord.Object(id=349181108669382657)
@@ -19,10 +19,18 @@ class Bot(commands.Bot):
         # Cogs Load
         for filename in os.listdir("Cogs"):
             if filename.endswith(".py"):
-                await bot.load_extension(f"Cogs.{filename[:-3]}")
+                await self.load_extension(f"Cogs.{filename[:-3]}")
         # This copies the global commands over to your guild.
+        # A common practice for syncing is to pick a specific guild for testing
         self.tree.copy_global_to(guild=MY_GUILD)
         await self.tree.sync(guild=MY_GUILD)
+
+        # When you're done testing
+        # self.tree.clear_commands(guild=MY_GUILD)
+        # await self.tree.sync(guild=MY_GUILD)
+
+        # When you're ready to publish your commands
+        # await self.tree.sync()
 
 
 intents = discord.Intents.all()
@@ -141,6 +149,11 @@ async def help_command(interaction: discord.Interaction, command: str = None):
     await interaction.delete_original_message()
 
 
+@bot.tree.context_menu(name="신고")
+async def report_message(interaction: discord.Interaction, message: discord.Message):
+    await interaction.response.send_modal(DiscordUI.ReportModal(bot, message))
+
+
 # Cogs 파일(.py)을 로드
 @bot.tree.command(name="로드")
 @app_commands.checks.has_permissions(administrator=True)
@@ -149,7 +162,7 @@ async def load_commands(interaction: discord.Interaction, extension: str):
     bot_owner = bot.get_user(276532581829181441)
     await bot.load_extension(f"Cogs.{extension}")
     await bot_owner.send(f":white_check_mark: {extension}을(를) 로드했습니다!")
-    await interaction.response.send_message("Load OK")
+    await interaction.response.send_message("Load OK", ephemeral=True)
 
 
 # Cogs 파일(.py)을 언로드
@@ -160,7 +173,7 @@ async def unload_commands(interaction: discord.Interaction, extension: str):
     bot_owner = bot.get_user(276532581829181441)
     await bot.unload_extension(f"Cogs.{extension}")
     await bot_owner.send(f":white_check_mark: {extension}을(를) 언로드했습니다!")
-    await interaction.response.send_message("Unload OK")
+    await interaction.response.send_message("Unload OK", ephemeral=True)
 
 
 # Cogs 파일(.py)을 리로드
@@ -179,7 +192,7 @@ async def reload_commands(interaction: discord.Interaction, extension: str = Non
         await bot.unload_extension(f"Cogs.{extension}")
         await bot.load_extension(f"Cogs.{extension}")
         await bot_owner.send(f":white_check_mark: {extension}을(를) 다시 불러왔습니다!")
-    await interaction.response.send_message("Reload OK")
+    await interaction.response.send_message("Reload OK", ephemeral=True)
 
 
 bot.run(os.environ['BETA_BOT_TOKEN'])
