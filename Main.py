@@ -1,18 +1,18 @@
 import asyncio
-import discord
 import os
 import random
 
-from discord import app_commands
+import discord
+from discord import app_commands, Interaction, Object, Intents, Guild, Message, Embed, Colour
 from discord.ext import commands
 from Util import DiscordEmbed, ImojiUtil, SQLUtil, DiscordUI
 
 # 봇 권한 부여
-MY_GUILD = discord.Object(id=349181108669382657)
+MY_GUILD = Object(id=349181108669382657)
 
 
 class Bot(commands.Bot):
-    def __init__(self, *, intents: discord.Intents):
+    def __init__(self, *, intents: Intents):
         super().__init__(command_prefix='.', intents=intents)
 
     async def setup_hook(self):
@@ -33,7 +33,7 @@ class Bot(commands.Bot):
         # await self.tree.sync()
 
 
-intents = discord.Intents.all()
+intents = Intents.all()
 bot = Bot(intents=intents)
 # !도움말을 위한 기존에 있는 help 제거
 bot.remove_command('help')
@@ -66,7 +66,7 @@ async def on_guild_join(guild):
 
 # 봇이 길드에서 삭제될 때
 @bot.event
-async def on_guild_remove(guild: discord.Guild):
+async def on_guild_remove(guild: Guild):
     print("remove data before quit...")
     ImojiUtil.emoji_dir_remove(guild.id)
     SQLUtil.remove_guild(guild.id)
@@ -74,7 +74,7 @@ async def on_guild_remove(guild: discord.Guild):
 
 
 @bot.event
-async def on_message(message: discord.Message):
+async def on_message(message: Message):
     if message.author.bot:
         return
     # 승민아조시 전용 리액션
@@ -129,10 +129,10 @@ async def on_message(message: discord.Message):
 
 @bot.tree.command(name="도움말", description="명령어를 출력, 검색합니다")
 @app_commands.rename(command="명령어")
-async def help_command(interaction: discord.Interaction, command: str = None):
-    embed = discord.Embed(title="이모지 봇 도움말",
-                          description="접두사는 `!` 입니다. 자세한 내용은 `!도움말`\0`명령어`를 입력하시면 됩니다.",
-                          color=discord.Colour.magenta())  # Embed 생성
+async def help_command(interaction: Interaction, command: str = None):
+    embed = Embed(title="이모지 봇 도움말",
+                  description="접두사는 `!` 입니다. 자세한 내용은 `!도움말`\0`명령어`를 입력하시면 됩니다.",
+                  color=Colour.magenta())  # Embed 생성
     if command is None:
         command_list = bot.tree.get_commands()  # cog_data에서 명령어 리스트 구하기
         for command in command_list:  # cog_list에 대한 반복문
@@ -150,14 +150,14 @@ async def help_command(interaction: discord.Interaction, command: str = None):
 
 
 @bot.tree.context_menu(name="신고하기")
-async def report_message(interaction: discord.Interaction, message: discord.Message):
+async def report_message(interaction: Interaction, message: Message):
     await interaction.response.send_modal(DiscordUI.ReportModal(bot, message))
 
 
 # Cogs 파일(.py)을 로드
 @bot.tree.command(name="로드")
 @app_commands.checks.has_permissions(administrator=True)
-async def load_commands(interaction: discord.Interaction, extension: str):
+async def load_commands(interaction: Interaction, extension: str):
     # 봇 오너
     bot_owner = bot.get_user(276532581829181441)
     await bot.load_extension(f"Cogs.{extension}")
@@ -168,7 +168,7 @@ async def load_commands(interaction: discord.Interaction, extension: str):
 # Cogs 파일(.py)을 언로드
 @bot.tree.command(name="언로드")
 @app_commands.checks.has_permissions(administrator=True)
-async def unload_commands(interaction: discord.Interaction, extension: str):
+async def unload_commands(interaction: Interaction, extension: str):
     # 봇 오너
     bot_owner = bot.get_user(276532581829181441)
     await bot.unload_extension(f"Cogs.{extension}")
@@ -179,7 +179,7 @@ async def unload_commands(interaction: discord.Interaction, extension: str):
 # Cogs 파일(.py)을 리로드
 @bot.tree.command(name="리로드")
 @app_commands.checks.has_permissions(administrator=True)
-async def reload_commands(interaction: discord.Interaction, extension: str = None):
+async def reload_commands(interaction: Interaction, extension: str = None):
     # 봇 오너
     bot_owner = bot.get_user(276532581829181441)
     if extension is None:  # extension이 None이면 (그냥 !리로드 라고 썼을 때)
