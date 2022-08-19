@@ -55,3 +55,22 @@ async def emoji_list(_search_result_list: list):
     embed = discord.Embed(title="이모지 리스트", description=emoji_command_str, color=discord.Colour.green())
     print("return discord embed...")
     return embed
+
+
+def rotation_map(current_map: dict, next_map: dict):
+    embed = discord.Embed(title="현재 맵", description=current_map['map'], colour=discord.Colour(0xB93038))
+    embed.set_image(url=current_map['asset'])
+    embed.add_field(name="시작 시간", value=f"<t:{current_map['start']}:T>\t<t:{current_map['start']}:R>", inline=False)
+    embed.add_field(name="종료 시간", value=f"<t:{current_map['end']}:T>\t<t:{current_map['end']}:R>", inline=False)
+    embed.add_field(name="다음 맵", value=next_map['map'], inline=False)
+    return embed
+
+
+def rotation_craft(daily_craft: dict, weekly_craft: dict, path):
+    image_path = path
+    image = discord.File(image_path, filename='craft.png')
+    embed = discord.Embed(title="현재 제작", description="", colour=discord.Colour(0xB93038))
+    embed.add_field(name='일간 제작 기간', value=f"<t:{daily_craft['start']}:f> ~ <t:{daily_craft['end']}:D>", inline=False)
+    embed.add_field(name='주간 제작 기간', value=f"<t:{weekly_craft['start']}:f> ~ <t:{weekly_craft['end']}:D>", inline=False)
+    embed.set_image(url="attachment://craft.png")
+    return embed, image

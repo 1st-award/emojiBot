@@ -1,5 +1,6 @@
 import asyncio
 import discord.ui
+from discord import Interaction
 from discord.ext import commands
 from Util import DiscordEmbed
 
@@ -17,7 +18,7 @@ class ReportButton(discord.ui.View):
         self.error = error
 
     @discord.ui.button(label="제작자 일 시키기", style=discord.ButtonStyle.danger)
-    async def report(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def report(self, interaction: Interaction, button: discord.ui.Button):
         bot_owner = self.bot.get_user(276532581829181441)
         embed = DiscordEmbed.warning("애러발생 일해라 ㅠ", self.error)
         await bot_owner.send(embed=embed)
@@ -59,7 +60,7 @@ class ReportModal(discord.ui.Modal, title="신고"):
             child.disable = True
         await self.response.edit(view=self)
 
-    async def on_submit(self, interaction: discord.Interaction) -> None:
+    async def on_submit(self, interaction: Interaction) -> None:
         timestamp = discord.utils.format_dt(interaction.created_at, 'F')
         if self.message.author.nick is None:
             author_name = self.message.author.name
@@ -87,7 +88,7 @@ class ReadyButton(discord.ui.View):
         self.embed = embed
 
     @discord.ui.button(label="증가", style=discord.ButtonStyle.blurple)
-    async def report(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def report(self, interaction: Interaction, button: discord.ui.Button):
         self.push_count += 1
 
         if interaction.user.id == self.current_user and self.push_count > 3:
@@ -110,6 +111,8 @@ class ReadyButton(discord.ui.View):
 class InviteButton(discord.ui.View):
     def __init__(self, embed: discord.Embed):
         super().__init__(timeout=180)
+        self.blue_team = None
+        self.red_team = None
         self.blue_btn = discord.ui.Button(label="참가", style=discord.ButtonStyle.blurple)
         self.red_btn = discord.ui.Button(label="종료", style=discord.ButtonStyle.red)
         self.add_item(self.blue_btn)
@@ -131,7 +134,7 @@ class InviteButton(discord.ui.View):
         self.blue_btn.disabled = True
         self.red_btn.disabled = True
 
-    async def invite(self, interaction: discord.Interaction):
+    async def invite(self, interaction: Interaction):
         player_mention = f"<@{interaction.user.id}>"
         if player_mention in self.players:
             embed = DiscordEmbed.warning("중복참여", f"<@{interaction.user.id}>님은 이미 참가하셨습니다.")
@@ -142,7 +145,7 @@ class InviteButton(discord.ui.View):
         self.embed.add_field(name="참가인원", value=f"{len(self.players)}명", inline=True)
         await interaction.response.edit_message(embed=self.embed, view=self)
 
-    async def end_invite(self, interaction: discord.Interaction):
+    async def end_invite(self, interaction: Interaction):
         if len(self.players) < 2:
             embed = DiscordEmbed.warning("인원 부족", "2명 이상일 때 종료 가능합니다.")
             await interaction.response.send_message(embed=embed)
@@ -150,19 +153,96 @@ class InviteButton(discord.ui.View):
         self.switch_label()
         self.switch_callback()
         half = len(self.players) // 2
-        red_team = self.players[:half]
-        blue_team = self.players[half:]
+        self.red_team = self.players[:half]
+        self.blue_team = self.players[half:]
         self.embed = DiscordEmbed.info("팀 결과", "")
-        self.embed.add_field(name="청팀", value=" ".join(blue_team), inline=True)
-        self.embed.add_field(name="홍팀", value=" ".join(red_team), inline=True)
+        self.embed.add_field(name="청팀", value=" ".join(self.blue_team), inline=True)
+        self.embed.add_field(name="홍팀", value=" ".join(self.red_team), inline=True)
         await interaction.response.edit_message(embed=self.embed, view=self)
 
-    async def blue_team_win(self, interaction: discord.Interaction):
+    async def blue_team_win(self, interaction: Interaction):
         self.button_disabled()
-        self.embed = DiscordEmbed.info("게임 결과", "청팀 승리!")
+        self.embed = DiscordEmbed.info("게임 결과", "")
+        self.embed.add_field(name="청팀 승리!", value=" ".join(self.blue_team), inline=True)
         await interaction.response.edit_message(embed=self.embed, view=self)
 
-    async def red_team_win(self, interaction: discord.Interaction):
+    async def red_team_win(self, interaction: Interaction):
         self.button_disabled()
-        self.embed = DiscordEmbed.info("게임 결과", "홍팀 승리!")
+        self.embed = DiscordEmbed.info("게임 결과", "")
+        self.embed.add_field(name="홍팀 승리!", value=" ".join(self.red_team), inline=True)
+        await interaction.response.edit_message(embed=self.embed, view=self)
+
+
+class News(discord.ui.View):
+    def __init__(self, embed: discord.Embed, news_list: list):
+        super().__init__(timeout=3600)
+        self.interaction: Interaction = None
+        self.embed = embed
+        self.news_list = news_list
+        self.current_page = 0
+        self.max_page = len(news_list) - 1
+
+        self.front_btn = discord.ui.Button(emoji="\u23EE", style=discord.ButtonStyle.blurple, disabled=True)
+        self.previous_btn = discord.ui.Button(emoji="\u25C0", style=discord.ButtonStyle.blurple, disabled=True)
+        self.next_btn = discord.ui.Button(emoji="\u25B6", style=discord.ButtonStyle.blurple)
+        self.back_btn = discord.ui.Button(emoji="\u23ED", style=discord.ButtonStyle.blurple)
+        self.link_btn = discord.ui.Button(label="자세히", style=discord.ButtonStyle.link, url=news_list[0]['link'], row=1)
+
+        self.add_item(self.front_btn)
+        self.add_item(self.previous_btn)
+        self.add_item(self.next_btn)
+        self.add_item(self.back_btn)
+        self.add_item(self.link_btn)
+
+        self.front_btn.callback = self.push_front
+        self.previous_btn.callback = self.push_prev
+        self.next_btn.callback = self.push_next
+        self.back_btn.callback = self.push_back
+
+    async def on_timeout(self) -> None:
+        await self.interaction.delete_original_message()
+
+    def _set_embed(self):
+        self.embed.title = self.news_list[self.current_page]['title']
+        self.embed.description = self.news_list[self.current_page]['short_desc']
+        self.embed.set_image(url=self.news_list[self.current_page]['img'])
+        self.link_btn.url = self.news_list[self.current_page]['link']
+
+    def _check_active_btn(self):
+        if self.current_page == 0:
+            self.front_btn.disabled = True
+            self.previous_btn.disabled = True
+        else:
+            self.front_btn.disabled = False
+            self.previous_btn.disabled = False
+
+        if self.current_page == self.max_page:
+            self.next_btn.disabled = True
+            self.back_btn.disabled = True
+        else:
+            self.next_btn.disabled = False
+            self.back_btn.disabled = False
+
+    async def push_front(self, interaction: Interaction):
+        self.current_page = 0
+        self._check_active_btn()
+        self._set_embed()
+        await interaction.response.edit_message(embed=self.embed, view=self)
+
+    async def push_prev(self, interaction: Interaction):
+        self.current_page -= 1
+        self._check_active_btn()
+        self._set_embed()
+        await interaction.response.edit_message(embed=self.embed, view=self)
+
+    async def push_next(self, interaction: Interaction):
+        self.current_page += 1
+        self._check_active_btn()
+        self._set_embed()
+        await interaction.response.edit_message(embed=self.embed, view=self)
+
+    async def push_back(self, interaction: Interaction):
+        self.current_page = self.max_page
+        self._check_active_btn()
+        self._set_embed()
         await interaction.response.edit_message(embed=self.embed, view=self)
