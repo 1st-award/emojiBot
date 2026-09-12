@@ -3,34 +3,38 @@ import os
 import requests
 from easy_pil import Font, Editor, load_image_async
 
-token = "57c617cffbd464457eef3f58e9d9b1ee"
 font_path = os.getcwd() + '\\apex.otf'
 bg_path = os.getcwd() + '\\crafting.png'
 
 
+def _get_json(endpoint, **params):
+    token = os.getenv("APEX_API_TOKEN")
+    if not token:
+        raise RuntimeError("APEX_API_TOKEN 환경 변수가 필요합니다.")
+    try:
+        response = requests.get(f"https://api.mozambiquehe.re/{endpoint}",
+                                params={"auth": token, **params}, timeout=15)
+    except requests.RequestException:
+        raise RuntimeError("APEX API 연결 실패") from None
+    with response:
+        if not response.ok:
+            # Do not expose the URL containing the API token in an exception.
+            raise RuntimeError(f"APEX API 요청 실패: HTTP {response.status_code}")
+        return response.json()
+
+
 def get_news():
-    global token
-    news_list = requests.get(
-        f"https://api.mozambiquehe.re/news?auth={token}&lang=ko").json()
-    return news_list
+    return _get_json("news", lang="ko")
 
 
 def get_rotation_map():
-    global token
-    rotation_map = requests.get(
-        f"https://api.mozambiquehe.re/maprotation?auth={token}").json()
-    current_map = rotation_map['current']
-    next_map = rotation_map['next']
-    return current_map, next_map
+    rotation = _get_json("maprotation")
+    return rotation["current"], rotation["next"]
 
 
 def get_crafts():
-    global token
-    craft_list = requests.get(
-        f"https://api.mozambiquehe.re/crafting?auth={token}").json()
-    daily_craft = craft_list[0]
-    weekly_craft = craft_list[1]
-    return daily_craft, weekly_craft
+    crafts = _get_json("crafting")
+    return crafts[0], crafts[1]
 
 
 async def create_rotation_craft_img(daily_craft, weekly_craft):
@@ -39,8 +43,7 @@ async def create_rotation_craft_img(daily_craft, weekly_craft):
     x = 170
     y = 115
     crafts = daily_craft['bundleContent'] + weekly_craft['bundleContent']
-    i = 0
-    for craft in crafts:
+    for i, craft in enumerate(crafts):
         asset = await load_image_async(craft['itemType']['asset'])
         asset = asset.resize((40, 40))
         frame.paste(asset, (x + (110 * i), y))
@@ -48,7 +51,6 @@ async def create_rotation_craft_img(daily_craft, weekly_craft):
                    color=(143, 221, 223),
                    font=font,
                    align='center')
-        i += 1
 
     frame.save('result_craft.png')
 

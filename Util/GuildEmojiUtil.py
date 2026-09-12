@@ -1,4 +1,6 @@
-import SQLUtil
+import logging
+logger = logging.getLogger(__name__)
+from Util import SQLUtil
 
 # global index
 guild_emoji_list = []
@@ -17,12 +19,12 @@ class SearchEmojiFileName:
         return self
 
     async def __anext__(self):
-        print(f"run async for... current {self.current} until {self.stop}")
+        logger.debug('%s', f"run async for... current {self.current} until {self.stop}")
         if self.current < self.stop:
-            print(self.emoji_tuple_list[self.current][1], self.emoji_command)
-            if self.emoji_tuple_list[self.current][1] == self.emoji_command:
-                print("match!")
-                self.emoji_file_name = self.emoji_tuple_list[self.current][0]
+            logger.debug('%s %s', self.emoji_tuple_list[self.current][1], self.emoji_command)
+            if self.emoji_tuple_list[self.current][2] == self.emoji_command:
+                logger.debug('%s', "match!")
+                self.emoji_file_name = self.emoji_tuple_list[self.current][1]
             self.current += 1
             return self.emoji_file_name
         else:
@@ -41,10 +43,11 @@ class SearchGuildClass:
         return self
 
     async def __anext__(self):
-        print(f"run async for... current {self.current} until {self.stop}")
+        logger.debug('%s', f"run async for... current {self.current} until {self.stop}")
         if self.current < self.stop:
             if self.guild_list[self.current].guildID == self.guildID:
-                return self.guild_list[self.current]
+                self.current += 1
+                return self.guild_list[self.current - 1]
             self.current += 1
             return None
         else:
@@ -54,20 +57,16 @@ class SearchGuildClass:
 # db에 있는 길드 이미지를 램에 로드하기위한 class
 class GuildEmoji:
     def __init__(self, _guildID: int, _global_emoji_list):
-        print(f"new guild emoji class {_guildID}...")
+        logger.debug('%s', f"new guild emoji class {_guildID}...")
         self.guildID = _guildID
-        print("load guild emoji command")
+        logger.debug('%s', "load guild emoji command")
         self.emoji_tuple_list = SQLUtil.emoji_search_all(_guildID)
         self.emoji_tuple_list.extend(_global_emoji_list)
-        print(self.guildID, self.emoji_tuple_list)
+        logger.debug('%s %s', self.guildID, self.emoji_tuple_list)
 
     # 이미지 명령어를 통해 이미지 파일을 반환한다.
     async def emoji_search(self, emoji_command: str):
-        async for emoji in SearchEmojiFileName(len(self.emoji_tuple_list), self.emoji_tuple_list, emoji_command):
-            print("result", emoji)
-            if emoji is not None:
-                return emoji
-        return None
+        return next((path for _, path, command in self.emoji_tuple_list if command == emoji_command), None)
 
     # db와 동기화
     def update_emoji_list(self):
@@ -76,8 +75,4 @@ class GuildEmoji:
 
 # guild_emoji_list에서 guildID와 일치하는 GuildEmoji.class를 반환
 async def get_guild_class(_guildID: int):
-    async for guild_class in SearchGuildClass(len(guild_emoji_list), guild_emoji_list, _guildID):
-        print("result", guild_class)
-        if guild_class is not None:
-            return guild_class
-    return None
+    return next((guild for guild in guild_emoji_list if guild.guildID == _guildID), None)

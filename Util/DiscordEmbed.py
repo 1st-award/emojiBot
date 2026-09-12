@@ -1,5 +1,6 @@
 import discord
 from pathlib import Path
+from Util.ImojiUtil import emoji_path
 
 def info(_title: str, _description: str = ""):
     return discord.Embed(title=_title, description=_description, color=discord.Colour.green())
@@ -16,22 +17,22 @@ def complete(_title: str, _description: str = ""):
 async def picture(_message: discord.Message, _emoji_file_name: str, _is_global_icon=False):
     # 디스코드에 올릴 파일을 지정하고, attachment에서 사용할 이름을 "image.png"로 지정
     extension = Path(_emoji_file_name).suffix.lstrip(".")
-    user_name = _message.author.nick
+    user_name = _message.author.display_name
     if user_name is None:
         user_name = _message.author.name
         
     embed = discord.Embed(color=discord.Colour.dark_magenta())
     embed.set_author(name=user_name, icon_url=_message.author.display_avatar.url)
     if _is_global_icon:
-        image = discord.File(f"Emoji/Global_Icon/{_emoji_file_name}", filename=f"image.{extension}")
+        image = discord.File(emoji_path(_emoji_file_name, -1), filename=f"image.{extension}")
         embed.set_image(url=f"attachment://image.{extension}")
     else:
-        image = discord.File(f"Emoji/{_message.guild.id}/{_emoji_file_name}", filename=_emoji_file_name)
+        image = discord.File(emoji_path(_emoji_file_name, _message.guild.id), filename=_emoji_file_name)
         embed.set_image(url=f"attachment://{_emoji_file_name}")
     return embed, image
 
 def bytesIO_image(author, image):
-    user_name = author.nick
+    user_name = author.display_name
     if user_name is None:
         user_name = author.name
     # Embed 생성    
@@ -44,32 +45,10 @@ def bytesIO_image(author, image):
     return embed, file
 
 async def emoji_list(_search_result_list: list):
-    print("start make emoji list...")
-
-    class IndexCommand:
-        def __init__(self, length):
-            self.current = 0
-            self.stop = length
-            self.emoji_command_str = ""
-
-        def __aiter__(self):
-            return self
-
-        async def __anext__(self):
-            # print(f"run async for...current {self.current} until {self.stop}")
-            if self.current < self.stop:
-                self.emoji_command_str += "`" + _search_result_list[self.current][2] + "`\t"
-                self.current += 1
-                return self.emoji_command_str
-            else:
-                raise StopAsyncIteration
-
-    async for emoji_num in IndexCommand(len(_search_result_list)):
-        emoji_command_str = emoji_num
-
-    embed = discord.Embed(title="이모지 리스트", description=emoji_command_str, color=discord.Colour.green())
-    # print("return discord embed...")
-    return embed
+    description = "\t".join(f"`{row[2]}`" for row in _search_result_list)
+    if len(description) > 4096:
+        description = description[:4050] + "\n… 일부만 표시합니다."
+    return discord.Embed(title="이모지 리스트", description=description or "등록된 이모지가 없습니다.", color=discord.Colour.green())
 
 
 def rotation_map(current_map: dict, next_map: dict):

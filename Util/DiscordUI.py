@@ -54,18 +54,14 @@ class ReportModal(discord.ui.Modal, title="신고"):
     )
 
     async def on_timeout(self) -> None:
-        for child in self.children:
-            child.label = "만료된 버튼"
-            child.style = discord.ButtonStyle.danger
-            child.disable = True
-        await self.response.edit(view=self)
+        self.stop()
 
     async def on_submit(self, interaction: Interaction) -> None:
         timestamp = discord.utils.format_dt(interaction.created_at, 'F')
-        if self.message.author.nick is None:
+        if self.message.author.display_name is None:
             author_name = self.message.author.name
         else:
-            author_name = self.message.author.nick
+            author_name = self.message.author.display_name
         owner = self.bot.get_user(interaction.guild.owner_id)
         embed = DiscordEmbed.warning("신고 접수",
                                      f"신고 유형: {self.report_type.values[0]}\n"
@@ -180,6 +176,8 @@ class News(discord.ui.View):
         self.embed = embed
         self.news_list = news_list
         self.current_page = 0
+        if not news_list:
+            raise ValueError("뉴스 목록이 비어 있습니다.")
         self.max_page = len(news_list) - 1
 
         self.front_btn = discord.ui.Button(emoji="\u23EE", style=discord.ButtonStyle.blurple, disabled=True)
@@ -198,9 +196,11 @@ class News(discord.ui.View):
         self.previous_btn.callback = self.push_prev
         self.next_btn.callback = self.push_next
         self.back_btn.callback = self.push_back
+        self._check_active_btn()
 
     async def on_timeout(self) -> None:
-        await self.interaction.delete_original_message()
+        if self.interaction is not None:
+            await self.interaction.delete_original_response()
 
     def _set_embed(self):
         self.embed.title = self.news_list[self.current_page]['title']
@@ -209,19 +209,8 @@ class News(discord.ui.View):
         self.link_btn.url = self.news_list[self.current_page]['link']
 
     def _check_active_btn(self):
-        if self.current_page == 0:
-            self.front_btn.disabled = True
-            self.previous_btn.disabled = True
-        else:
-            self.front_btn.disabled = False
-            self.previous_btn.disabled = False
-
-        if self.current_page == self.max_page:
-            self.next_btn.disabled = True
-            self.back_btn.disabled = True
-        else:
-            self.next_btn.disabled = False
-            self.back_btn.disabled = False
+        self.front_btn.disabled = self.previous_btn.disabled = self.current_page == 0
+        self.next_btn.disabled = self.back_btn.disabled = self.current_page == self.max_page
 
     async def push_front(self, interaction: Interaction):
         self.current_page = 0
@@ -230,13 +219,13 @@ class News(discord.ui.View):
         await interaction.response.edit_message(embed=self.embed, view=self)
 
     async def push_prev(self, interaction: Interaction):
-        self.current_page -= 1
+        self.current_page = max(0, self.current_page - 1)
         self._check_active_btn()
         self._set_embed()
         await interaction.response.edit_message(embed=self.embed, view=self)
 
     async def push_next(self, interaction: Interaction):
-        self.current_page += 1
+        self.current_page = min(self.max_page, self.current_page + 1)
         self._check_active_btn()
         self._set_embed()
         await interaction.response.edit_message(embed=self.embed, view=self)

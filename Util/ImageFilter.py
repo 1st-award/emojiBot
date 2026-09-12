@@ -1,3 +1,5 @@
+import logging
+logger = logging.getLogger(__name__)
 import os
 import discord
 import numpy as np
@@ -14,73 +16,41 @@ plt.rcParams["axes.unicode_minus"] = False
 # Load the model
 model = load_model(f'{os.getcwd().replace(back_slash, "/")}/keras/keras_model.h5')
 
-# Create the array of the right shape to feed into the keras model
-# The 'length' or number of images you can put into the array is
-# determined by the first position in the shape tuple, in this case 1.
-data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
-
-
 async def save_image(_image: discord.Attachment):
     file_type = _image.content_type.split("/")
     file_name = f"{str(_image.id)}.{file_type[1]}"
     file_path = f"keras/{file_name}"
 
-    print("image save...")
+    logger.debug('%s', "image save...")
     await _image.save(file_path)
-    print("image save complete")
+    logger.debug('%s', "image save complete")
 
     return file_path, file_name
 
 
 def remove_image(image_path):
-    print("image remove...")
+    logger.debug('%s', "image remove...")
     os.remove(image_path)
-    print("image remove complete...")
+    logger.debug('%s', "image remove complete...")
 
 
-def resize_image(image, image_path):
-    try:
-        data = np.ndarray(shape=(1, 224, 224, 4), dtype=np.float32)
-        image_array = np.asarray(image)
-        normalized_image_array = (image_array.astype(np.float32) / 127.0) - 1
-        data[0] = normalized_image_array
-    except ValueError:
-        remove_image(image_path)
+def resize_image(image, image_path=None):
+    image = ImageOps.fit(image.convert("RGB"), (224, 224), Image.Resampling.LANCZOS)
+    return np.expand_dims(np.asarray(image, dtype=np.float32) / 127.0 - 1, axis=0)
 
 
 async def predict_image(image: discord.Attachment):
     image_path, image_name = await save_image(image)
-    # Replace this with the path to your image
-    image = Image.open(image_path)
-    # resize the image to a 224x224 with the same strategy as in TM2:
-    # resizing the image to be at least 224x224 and then cropping from the center
-    size = (224, 224)
-    image = ImageOps.fit(image, size, Image.ANTIALIAS)
-
-    # turn the image into a numpy array
-    image_array = np.asarray(image)
-    # Normalize the image
-    normalized_image_array = (image_array.astype(np.float32) / 127.0) - 1
-    # Load the image into the array
-    try:
-        data[0] = normalized_image_array
-    except ValueError:
-        resize_image(image, image_path)
-
-    # run the inference
-    prediction = model.predict(data)
-    prediction = list(map(lambda x: x * 100, prediction))
+    with Image.open(image_path) as source:
+        data = resize_image(source)
+    prediction = model.predict(data) * 100
     save_predict_result_graph(prediction[0], image_path)
-    discord_image = discord.File(image_path, filename=image_name)
-    return discord_image, image_path
+    return discord.File(image_path, filename=image_name), image_path
 
 
 def create_color_arr(length):
     color_list = ["#E67701", "#D84C6F", "#794AEF", "#1967D2"]
-    bar_color = []
-    for cnt in range(0, length):
-        bar_color.append(color_list[cnt % len(color_list)])
-    return bar_color
+    return [color_list[i % len(color_list)] for i in range(length)]
 
 
 def draw_value_bar_top(result_val_arr, y):

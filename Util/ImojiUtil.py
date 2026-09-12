@@ -1,7 +1,12 @@
+import logging
+logger = logging.getLogger(__name__)
+import asyncio
+from pathlib import Path
 import discord
 from Util import GIFConvert
 import os
 import shutil
+import filecmp
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 from easy_pil import Editor, Canvas, Font
@@ -9,62 +14,72 @@ from easy_pil import Editor, Canvas, Font
 
 
 async def save_emoji(_emoji: discord.Attachment, _guildID: int):
-    file_type = _emoji.content_type.split("/")
-    file_name = str(_emoji.id) + "." + file_type[1]
+    file_name = attachment_filename(_emoji)
+    emoji_dir_create(_guildID)
 
-    print("emoji save...")
-    await _emoji.save(f"Emoji/{_guildID}/{file_name}")
-    print("emoji save complete")
+    logger.debug('%s', "emoji save...")
+    await _emoji.save(emoji_path(file_name, _guildID))
+    logger.debug('%s', "emoji save complete")
 
-    if not _emoji.filename.endswith(".gif"):
-        emoji_resize_normal(file_name, _guildID)
+    if not file_name.endswith(".gif"):
+        await asyncio.to_thread(emoji_resize_normal, file_name, _guildID)
     else:
-        emoji_resize_gif(file_name, _guildID)
+        await asyncio.to_thread(emoji_resize_gif, file_name, _guildID)
 
 
 def emoji_remove(_emoji_filename: str, _guildID: int):
-    print("emoji remove...")
-    os.remove(f"Emoji/{_guildID}/{_emoji_filename}")
-    print("emoji remove complete...")
+    logger.debug('%s', "emoji remove...")
+    emoji_path(_emoji_filename, _guildID).unlink(missing_ok=True)
+    logger.debug('%s', "emoji remove complete...")
 
 
 def emoji_dir_create(_guildID: int):
-    print(f"create Emoji/{_guildID} folder...")
-    os.mkdir(f"Emoji/{_guildID}")
-    print(f"create folder complete")
+    logger.debug('%s', f"create Emoji/{_guildID} folder...")
+    emoji_path("placeholder", _guildID).parent.mkdir(parents=True, exist_ok=True)
+    logger.debug('%s', f"create folder complete")
 
 
 def emoji_dir_remove(_guildID: int):
-    print(f"removing emoji dir {_guildID}...")
-    shutil.rmtree(f"Emoji/{_guildID}")
-    print(f"remove {_guildID} complete")
+    logger.debug('%s', f"removing emoji dir {_guildID}...")
+    directory = emoji_path("placeholder", _guildID).parent
+    if directory.exists():
+        shutil.rmtree(directory)
+    logger.debug('%s', f"remove {_guildID} complete")
 
 
 def emoji_dir_copy(toGuildID: int, fromGuildID: int):
-    print("try to copy")
-    emoji_dir_remove(fromGuildID)
-    shutil.copytree(f"Emoji/{toGuildID}", f"Emoji/{fromGuildID}")
-    print("copy success")
+    logger.debug('%s', "try to copy")
+    if toGuildID == fromGuildID:
+        raise ValueError("같은 서버로 복사할 수 없습니다.")
+    source = emoji_path("placeholder", toGuildID).parent
+    destination = emoji_path("placeholder", fromGuildID).parent
+    for source_file in source.iterdir():
+        target = destination / source_file.name
+        if source_file.is_dir() or source_file.is_symlink():
+            raise ValueError("이모지 폴더에는 일반 파일만 허용됩니다.")
+        if target.exists() and not filecmp.cmp(source_file, target, shallow=False):
+            raise FileExistsError("대상 서버에 내용이 다른 같은 이름의 파일이 있습니다.")
+    shutil.copytree(source, destination, dirs_exist_ok=True)
+    logger.debug('%s', "copy success")
 
 
 # TODO 일반 사진도 변환 후 3MB가 넘어갈 수 있으므로 검사하는 함수 만들기
 def emoji_resize_normal(_emoji_filename: str, _guildID: int):
-    print(f"normal resizing {_emoji_filename}...")
-    img = Image.open(f'Emoji/{_guildID}/{_emoji_filename}')
-    img_resize = img.resize((int(128), int(128)))
-    img_resize.save(f'Emoji/{_guildID}/{_emoji_filename}')
-    print(f"normal resizing {_emoji_filename} complete...")
+    logger.debug('%s', f"normal resizing {_emoji_filename}...")
+    with Image.open(emoji_path(_emoji_filename, _guildID)) as img:
+        img_resize = img.resize((128, 128))
+    img_resize.save(emoji_path(_emoji_filename, _guildID))
+    logger.debug('%s', f"normal resizing {_emoji_filename} complete...")
 
 
 # TODO 위에 적어놨듯이 사진도 변환후 3MB가 넘어갈 수 있으니 확인하는 함수 만들면서 밑에 확인하는 if문 제거 및 코드 정리 하기
 # 1. 해상도는 높으나 크기가 적은 파일 2. 해상도는 낮으나 크기가 큰 파일
 def emoji_resize_gif(_emoji_filename: str, _guildID: int):
-    print(f"gif resizing {_emoji_filename}...")
-    im = Image.open(f'Emoji/{_guildID}/{_emoji_filename}')
-    file_size = os.stat(f'Emoji/{_guildID}/{_emoji_filename}').st_size / pow(1024, 2)
-    w_size = im.size[0]
-    h_size = im.size[1]
-    print(w_size, h_size)
+    logger.debug('%s', f"gif resizing {_emoji_filename}...")
+    with Image.open(emoji_path(_emoji_filename, _guildID)) as im:
+        w_size, h_size = im.size
+    file_size = os.stat(emoji_path(_emoji_filename, _guildID)).st_size / pow(1024, 2)
+    logger.debug('%s %s', w_size, h_size)
     # 3mb이하는 resizing pass
     if file_size <= 3:
         return
@@ -75,15 +90,15 @@ def emoji_resize_gif(_emoji_filename: str, _guildID: int):
             w_size = h_size = 350
         # 해상도가 350 350이하이며 최소크기(128 128)보다 큰파일 -> 128, 128로 고정
         elif w_size > 128 or h_size > 128:
-            w_size, h_size = 128
+            w_size = h_size = 128
         # 해상도가 128이하이고 크기가 3mb가 넘어갈 때
         else:
             raise ValueError(f"GIF가 조건에 맞지 않습니다. `조건: 크기(3MB이하) 해상도(128X128이상)`\n"
                              f"`업로드한 파일크기: {round(file_size, 2)}MB`\t`해상도: {w_size}X{h_size}`")
-    print(w_size, h_size)
-    GIFConvert.scale_gif(f'Emoji/{_guildID}/{_emoji_filename}', (w_size, h_size))
-    file_size = os.stat(f'Emoji/{_guildID}/{_emoji_filename}').st_size / pow(1024, 2)
-    print(f"gif resizing {_emoji_filename} complete... {file_size}MB")
+    logger.debug('%s %s', w_size, h_size)
+    GIFConvert.scale_gif(emoji_path(_emoji_filename, _guildID), (w_size, h_size))
+    file_size = os.stat(emoji_path(_emoji_filename, _guildID)).st_size / pow(1024, 2)
+    logger.debug('%s', f"gif resizing {_emoji_filename} complete... {file_size}MB")
     # 변환은 했지만 여전히 파일 크기가 3MB이상 일 때
     if file_size > 3:
         # Permission 에러 방지를 위해 im 변수 메모리에서 제거
@@ -323,3 +338,20 @@ def create_image(
     output.seek(0)
 
     return output
+
+EMOJI_ROOT = Path(__file__).resolve().parents[1] / "Emoji"
+
+
+def emoji_path(filename, guild_id):
+    directory = EMOJI_ROOT / ("Global_Icon" if guild_id == -1 else str(int(guild_id)))
+    path = (directory / filename).resolve()
+    if path.parent != directory.resolve() or not filename or Path(filename).name != filename:
+        raise ValueError("잘못된 이미지 경로입니다.")
+    return path
+
+
+def attachment_filename(attachment):
+    extension = {"image/jpeg": "jpg", "image/png": "png", "image/gif": "gif"}.get(attachment.content_type)
+    if extension is None:
+        raise NotImplementedError("지원하지 않는 파일입니다.")
+    return f"{attachment.id}.{extension}"

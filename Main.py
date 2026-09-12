@@ -1,12 +1,19 @@
 import asyncio
 import os
-import random
+import logging
+from pathlib import Path
 
 import discord
 from discord import app_commands, Interaction, Object, Intents, Guild, Message, Embed, Colour
 from discord.ext import commands
 from dotenv import load_dotenv
 from Util import DiscordEmbed, ImojiUtil, SQLUtil, DiscordUI
+from Util.LoggingUtil import configure_logging
+from Util.EmojiCommands import handle_emoji_message
+
+logger = logging.getLogger(__name__)
+WHITELIST_BOT_IDS = frozenset({1148832483912208467, 1148832491906535474,
+    1148832517982531665, 1148832499494047775, 1148832505332519024, 1148832510017540190})
 
 # 봇 권한 부여
 MY_GUILD = Object(id=349181108669382657)
@@ -18,7 +25,7 @@ class Bot(commands.Bot):
 
     async def setup_hook(self):
         # Cogs Load
-        for filename in os.listdir("Cogs"):
+        for filename in os.listdir(Path(__file__).resolve().parent / "Cogs"):
             if filename.endswith(".py"):
                 await self.load_extension(f"Cogs.{filename[:-3]}")
         # This copies the global commands over to your guild.
@@ -49,10 +56,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 @bot.event
 async def on_ready():
     await bot.change_presence(activity=discord.Game(name="!도움말"))
-    print(f"봇 이름: {bot.user.name}")
-    for guilds in bot.guilds:
-        print(str(guilds.owner_id))
-    print("-" * 30)
+    logger.info("Bot ready: user=%s guild_count=%s", bot.user, len(bot.guilds))
 
 
 # 봇이 길드에 들어갔을 때
@@ -65,53 +69,25 @@ async def on_guild_join(guild):
             discord_embed = DiscordEmbed.info(
                 '봇 참가', '이모지 봇이 참여했습니다. 명령어는 `!도움말`입니다')
             await channel.send(embed=discord_embed, delete_after=10.0)
-        break
+            break
 
 
 # 봇이 길드에서 삭제될 때
 @bot.event
 async def on_guild_remove(guild: Guild):
-    print("remove data before quit...")
+    logger.info("Removing guild data: guild_id=%s", guild.id)
     ImojiUtil.emoji_dir_remove(guild.id)
     SQLUtil.remove_guild(guild.id)
-    print("remove success")
+    logger.info("Guild data removed: guild_id=%s", guild.id)
 
 
 @bot.event
 async def on_message(message: Message):
-    whitelist_bot_id = [1148832483912208467, 1148832491906535474, 1148832517982531665,
-                        1148832499494047775, 1148832505332519024, 1148832510017540190]
-    if message.author.bot and message.author.id not in whitelist_bot_id:
+    if message.author.bot and message.author.id not in WHITELIST_BOT_IDS:
         return
-
-    is_global_icon = False
-    if message.content.startswith("~"):
-        await message.delete()
-
-        msg = message.content.replace("~", "")
-        if msg == "랜덤":
-            result = SQLUtil.emoji_search_all(message.guild.id)
-            global_result = SQLUtil.load_emoji_global_emoji()
-            emoji_list = []
-            for emoji_command in result:
-                emoji_list.append(emoji_command[2])
-            for emoji_command in global_result:
-                emoji_list.append(emoji_command[2])
-            msg = random.choice(emoji_list)
-
-        result_args = SQLUtil.emoji_search(msg, message.guild.id)
-        if result_args is None:
-            result_args = SQLUtil.emoji_global_emoji_search(msg)
-            is_global_icon = True
-
-        if isinstance(result_args, tuple):
-            discord_embed, image = await DiscordEmbed.picture(message, result_args[0], is_global_icon)
-            await message.channel.send(embed=discord_embed, file=image, reference=message.reference)
-        else:
-            discord_embed = DiscordEmbed.warning(
-                "이모지 없음", f"`{message.content}`는 이모지 리스트에 없습니다.")
-            await message.channel.send(embed=discord_embed, reference=message.reference, delete_after=10.0)
-    # 기존에 작성한 명령어로 이동
+    if message.guild is not None and message.content.startswith("~"):
+        await handle_emoji_message(message)
+        return
     await bot.process_commands(message)
 
 
@@ -150,7 +126,9 @@ async def report_message(interaction: Interaction, message: Message):
 @app_commands.checks.has_permissions(administrator=True)
 async def load_commands(interaction: Interaction, extension: str):
     # 봇 오너
-    bot_owner = bot.get_user(276532581829181441)
+    if not await bot.is_owner(interaction.user):
+        raise app_commands.CheckFailure("봇 소유자만 실행할 수 있습니다.")
+    bot_owner = interaction.user
     await bot.load_extension(f"Cogs.{extension}")
     await bot_owner.send(f":white_check_mark: {extension}을(를) 로드했습니다!")
     await interaction.response.send_message("Load OK", ephemeral=True)
@@ -161,7 +139,9 @@ async def load_commands(interaction: Interaction, extension: str):
 @app_commands.checks.has_permissions(administrator=True)
 async def unload_commands(interaction: Interaction, extension: str):
     # 봇 오너
-    bot_owner = bot.get_user(276532581829181441)
+    if not await bot.is_owner(interaction.user):
+        raise app_commands.CheckFailure("봇 소유자만 실행할 수 있습니다.")
+    bot_owner = interaction.user
     await bot.unload_extension(f"Cogs.{extension}")
     await bot_owner.send(f":white_check_mark: {extension}을(를) 언로드했습니다!")
     await interaction.response.send_message("Unload OK", ephemeral=True)
@@ -172,18 +152,22 @@ async def unload_commands(interaction: Interaction, extension: str):
 @app_commands.checks.has_permissions(administrator=True)
 async def reload_commands(interaction: Interaction, extension: str = None):
     # 봇 오너
-    bot_owner = bot.get_user(276532581829181441)
+    if not await bot.is_owner(interaction.user):
+        raise app_commands.CheckFailure("봇 소유자만 실행할 수 있습니다.")
+    bot_owner = interaction.user
     if extension is None:  # extension이 None이면 (그냥 !리로드 라고 썼을 때)
-        for filename in os.listdir("Cogs"):
+        for filename in os.listdir(Path(__file__).resolve().parent / "Cogs"):
             if filename.endswith(".py"):
-                await bot.unload_extension(f"Cogs.{filename[:-3]}")
-                await bot.load_extension(f"Cogs.{filename[:-3]}")
+                await bot.reload_extension(f"Cogs.{filename[:-3]}")
         await bot_owner.send(":white_check_mark: 모든 명령어를 다시 불러왔습니다!")
     else:
-        await bot.unload_extension(f"Cogs.{extension}")
-        await bot.load_extension(f"Cogs.{extension}")
+        await bot.reload_extension(f"Cogs.{extension}")
         await bot_owner.send(f":white_check_mark: {extension}을(를) 다시 불러왔습니다!")
     await interaction.response.send_message("Reload OK", ephemeral=True)
 
 
-bot.run(BOT_TOKEN)
+if __name__ == "__main__":
+    configure_logging()
+    if not BOT_TOKEN:
+        raise RuntimeError("BOT_TOKEN 환경 변수가 필요합니다.")
+    bot.run(BOT_TOKEN, log_handler=None)
