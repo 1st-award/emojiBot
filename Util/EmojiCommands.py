@@ -9,6 +9,10 @@ logger = logging.getLogger(__name__)
 
 
 def resolve_emoji(command, guild_id):
+    """명령어와 서버 ID로 (파일명, 공용 여부)를 찾고 없으면 None을 반환한다.
+
+    랜덤 명령은 서버·공용 전체에서 선택하며, 일반 검색은 서버 이모지를 우선한다.
+    """
     if command == "랜덤":
         result = SQLUtil.random_emoji(guild_id)
         return (result[0], result[1] == SQLUtil.GLOBAL_GUILD_ID) if result else None
@@ -20,6 +24,11 @@ def resolve_emoji(command, guild_id):
 
 
 async def handle_emoji_message(message):
+    """서버의 ~ 메시지를 삭제하고 조회 결과를 같은 채널에 전송한다.
+
+    호출자는 서버 메시지와 접두사를 확인해야 한다. 빈 명령은 무시하고 DB 조회는
+    작업 스레드에서 수행한다. 전송 파일은 항상 닫으며 처리 오류는 로그에 기록한다.
+    """
     command = message.content[1:].strip()
     if not command:
         return

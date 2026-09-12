@@ -5,6 +5,11 @@ from pathlib import Path
 
 
 def configure_logging():
+    """LOG_LEVEL 환경 변수로 콘솔과 순환 파일 로깅을 설정한다.
+
+    기본 레벨은 INFO이며 잘못된 값은 ValueError로 거부한다. 기존 루트 핸들러를
+    교체하고 logs/bot.log를 5MiB 단위로 순환하여 이전 파일 3개를 보관한다.
+    """
     level = os.getenv("LOG_LEVEL", "INFO").upper()
     if level not in {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}:
         raise ValueError("LOG_LEVEL must be DEBUG, INFO, WARNING, ERROR or CRITICAL")
